@@ -2635,9 +2635,13 @@ function onModalReportTypeChange(type) {
   if (!helper) return;
 
   if (type === 'finishing') {
-    helper.innerHTML = 'Expected columns: <code>Line | Buyer | Style | Process | Manpower | SMV | Day | Target/Hr | 1st - 11th Hours | Total Prod | Target | Eff% | Remarks</code>';
+    helper.innerHTML = 'Expected: <code>Line | Buyer | Style | Process | Manpower | SMV | Day | Target/Hr | 1st - 11th Hours | Total Prod | Target | Eff% | Remarks</code>';
+  } else if (type === 'fabric') {
+    helper.innerHTML = 'Expected: <code>SL | Buyer | Style | Supplier | Ref No | Color | Fabric Construction | Opening | Last Rcvd | Balance | Rolls | Rack | Merch-Name | Status</code>';
+  } else if (type === 'cutting') {
+    helper.innerHTML = 'Expected: <code>Line | Buyer | Style | Cut Plan | Target | Actual Cut | Variance | Efficiency | Remarks</code>';
   } else {
-    helper.innerHTML = 'Expected columns: <code>SL | Buyer | Style | Supplier | Ref No | Color | Fabric Construction | Opening | Last Rcvd | Balance | Rolls | Rack | Merch-Name | Status</code>';
+    helper.innerHTML = 'Expected: <code>Line | Buyer | Style | Manpower | Target/Hr | Hourly Prod | Total Output | Efficiency | Remarks</code>';
   }
 }
 
