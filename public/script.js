@@ -2535,11 +2535,12 @@ function renderFallbackVectorPoster() {
   img._failCount++;
 
   const fallbacks = [
-    'posters/notice.jpg',
     'posters/notice.jpeg',
+    'posters/notice.jpg',
+    'public/posters/notice.jpeg',
+    'public/posters/notice.jpg',
     'notice.jpeg',
-    'notice.jpg',
-    'public/posters/notice.jpg'
+    'notice.jpg'
   ];
 
   if (img._failCount <= fallbacks.length) {

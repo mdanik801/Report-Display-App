@@ -1049,7 +1049,7 @@ body {
 
     <!-- Centered Clean Poster Image -->
     <div id="posterCard" class="animate-dhopash flex items-center justify-center">
-      <img id="posterDisplayImage" src="posters/notice.jpg" alt="Notice Poster" class="poster-full-image" onerror="renderFallbackVectorPoster()" />
+      <img id="posterDisplayImage" src="posters/notice.jpeg" alt="Notice Poster" class="poster-full-image" onerror="renderFallbackVectorPoster()" />
     </div>
 
     <!-- Bottom Progress Track -->
@@ -3813,11 +3813,12 @@ function renderFallbackVectorPoster() {
   img._failCount++;
 
   const fallbacks = [
-    'posters/notice.jpg',
     'posters/notice.jpeg',
+    'posters/notice.jpg',
+    'public/posters/notice.jpeg',
+    'public/posters/notice.jpg',
     'notice.jpeg',
-    'notice.jpg',
-    'public/posters/notice.jpg'
+    'notice.jpg'
   ];
 
   if (img._failCount <= fallbacks.length) {
