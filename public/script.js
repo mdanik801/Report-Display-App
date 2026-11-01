@@ -1886,6 +1886,7 @@ function fetchPostersList() {
         const unique = [];
         data.forEach(fn => {
           const base = fn.replace(/\.[^/.]+$/, '').toLowerCase();
+          if (base === 'logo' || base === 'devlog') return;
           if (!seen.has(base)) {
             seen.add(base);
             unique.push(fn);

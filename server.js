@@ -124,7 +124,7 @@ function getSlideshowPosters() {
     if (!fs.existsSync(POSTERS_DIR)) return [];
     const files = fs.readdirSync(POSTERS_DIR);
     return files.filter(file => {
-      if (/^logo\.(png|jpe?g|webp|svg)$/i.test(file)) return false;
+      if (/^(logo|devlog)\.(png|jpe?g|webp|svg)$/i.test(file)) return false;
       const ext = path.extname(file).toLowerCase();
       return IMAGE_EXTENSIONS.has(ext);
     });
