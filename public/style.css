@@ -346,6 +346,41 @@ body {
   background-color: #F0FDF4;
 }
 
+/* Swing / Sewing Floor Data Table Styling */
+.swing-data-table th,
+.swing-data-table td {
+  padding: 0.35rem 0.45rem;
+  border: 1px solid #E2E8F0;
+  vertical-align: middle;
+}
+.swing-data-table tbody tr:nth-child(even) {
+  background-color: #F8FAFC;
+}
+.swing-data-table tbody tr:nth-child(odd) {
+  background-color: #FFFFFF;
+}
+.swing-data-table tbody tr:hover {
+  background-color: #ECFDF5 !important;
+}
+.swing-data-table tfoot tr {
+  font-weight: 700;
+}
+.swing-pm-group-start {
+  border-top: 2.5px solid #059669 !important;
+}
+.swing-sticky-col-pm {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-color: inherit;
+}
+.swing-sticky-col-line {
+  position: sticky;
+  left: 90px;
+  z-index: 10;
+  background-color: inherit;
+}
+
 /* Clean Empty Initial State */
 .blank-state-box {
   background: #FFFFFF;

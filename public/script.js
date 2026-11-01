@@ -153,11 +153,14 @@ function updateHeaderModuleTitle(moduleId = currentModule) {
 let currentModule = getInitialModule();
 let finishingData = null;        // Blank initial state
 let fabricData = null;           // Blank initial state
+let swingData = null;            // Blank initial state
 
 let finishingFilterMode = 'ALL'; // 'ALL' | 'Active' | 'High Eff' | 'Line Off'
 let finishingSearchTerm = '';
 let fabricFilterMode = 'ALL';    // 'ALL' | 'Running' | 'Shortage'
 let fabricSearchTerm = '';
+let swingFilterMode = 'ALL';     // 'ALL' | 'Running' | PM Name
+let swingSearchTerm = '';
 
 // Active Diagnostic Drawer State (Line IDs expanded)
 const expandedDiagnostics = new Set();
@@ -257,8 +260,14 @@ function loadStoredDataFromStorage() {
       try { fabricData = JSON.parse(storedFab); }
       catch (e) { fabricData = null; }
     }
+    const storedSwing = localStorage.getItem('al_muslim_swing_data');
+    if (storedSwing) {
+      try { swingData = JSON.parse(storedSwing); }
+      catch (e) { swingData = null; }
+    }
     const activeModule = normalizeModuleId(currentModule || 'finishing');
     if (activeModule === 'finishing') renderFinishingModule();
+    else if (activeModule === 'swing' || activeModule === 'sewing') renderSwingModule();
     else renderFabricModule();
     return;
   }
@@ -288,6 +297,15 @@ function loadStoredDataFromStorage() {
         localStorage.setItem('al_muslim_fabric_data', JSON.stringify(fabricData));
       }
 
+      // If server has no swing data, wipe local cache
+      if (!serverData || serverData.swingData === null || serverData.swingData === undefined) {
+        localStorage.removeItem('al_muslim_swing_data');
+        swingData = null;
+      } else {
+        swingData = serverData.swingData;
+        localStorage.setItem('al_muslim_swing_data', JSON.stringify(swingData));
+      }
+
       // Update version tracking to match server
       if (serverData && serverData.version) {
         serverSyncVersion = serverData.version;
@@ -296,6 +314,7 @@ function loadStoredDataFromStorage() {
       // Re-render current module with fresh (possibly empty) data
       const activeModule = normalizeModuleId(currentModule || 'finishing');
       if (activeModule === 'finishing') renderFinishingModule();
+      else if (activeModule === 'swing' || activeModule === 'sewing') renderSwingModule();
       else renderFabricModule();
     })
     .catch(() => {
@@ -310,6 +329,15 @@ function loadStoredDataFromStorage() {
         try { fabricData = JSON.parse(storedFab); }
         catch (e) { fabricData = null; }
       }
+      const storedSwing = localStorage.getItem('al_muslim_swing_data');
+      if (storedSwing) {
+        try { swingData = JSON.parse(storedSwing); }
+        catch (e) { swingData = null; }
+      }
+      const activeModule = normalizeModuleId(currentModule || 'finishing');
+      if (activeModule === 'finishing') renderFinishingModule();
+      else if (activeModule === 'swing' || activeModule === 'sewing') renderSwingModule();
+      else renderFabricModule();
     });
 }
 
@@ -321,6 +349,10 @@ async function clearCurrentModuleData() {
     localStorage.removeItem('al_muslim_finishing_data');
     finishingData = null;
     renderFinishingModule();
+  } else if (type === 'swing' || type === 'sewing') {
+    localStorage.removeItem('al_muslim_swing_data');
+    swingData = null;
+    renderSwingModule();
   } else {
     localStorage.removeItem('al_muslim_fabric_data');
     fabricData = null;
@@ -398,30 +430,31 @@ function switchModuleTab(tabName, shouldBroadcast = false) {
 
   const kpiFinishing = document.getElementById('finishingKpiBar');
   const kpiFabric = document.getElementById('fabricKpiBar');
+  const kpiSwing = document.getElementById('swingKpiBar');
 
   const modFinishing = document.getElementById('finishingFloorModule');
   const modFabric = document.getElementById('fabricStoreModule');
+  const modSwing = document.getElementById('swingFloorModule');
 
-  const isStoreView = (normTab === 'fabric' || normTab === 'store');
+  // Hide all modules and KPI bars first
+  [kpiFinishing, kpiFabric, kpiSwing].forEach(el => el && el.classList.add('hidden'));
+  [modFinishing, modFabric, modSwing].forEach(el => el && el.classList.add('hidden'));
 
-  if (!isStoreView) {
-    if (kpiFinishing) kpiFinishing.classList.remove('hidden');
-    if (kpiFabric) kpiFabric.classList.add('hidden');
-
-    if (modFinishing) modFinishing.classList.remove('hidden');
-    if (modFabric) modFabric.classList.add('hidden');
-
-    renderFinishingModule();
-    AutoScrollManager.init(document.getElementById('hourlyLinesScrollViewport'));
-  } else {
-    if (kpiFinishing) kpiFinishing.classList.add('hidden');
+  if (normTab === 'fabric' || normTab === 'store') {
     if (kpiFabric) kpiFabric.classList.remove('hidden');
-
-    if (modFinishing) modFinishing.classList.add('hidden');
     if (modFabric) modFabric.classList.remove('hidden');
-
     renderFabricModule();
     AutoScrollManager.init(document.getElementById('fabricTableScrollViewport'));
+  } else if (normTab === 'swing' || normTab === 'sewing') {
+    if (kpiSwing) kpiSwing.classList.remove('hidden');
+    if (modSwing) modSwing.classList.remove('hidden');
+    renderSwingModule();
+    AutoScrollManager.init(document.getElementById('swingTableScrollViewport'));
+  } else {
+    if (kpiFinishing) kpiFinishing.classList.remove('hidden');
+    if (modFinishing) modFinishing.classList.remove('hidden');
+    renderFinishingModule();
+    AutoScrollManager.init(document.getElementById('hourlyLinesScrollViewport'));
   }
 
   const modalSelect = document.getElementById('modalReportTypeSelect');
@@ -430,6 +463,10 @@ function switchModuleTab(tabName, shouldBroadcast = false) {
       modalSelect.value = normTab;
     } else if (normTab === 'store') {
       modalSelect.value = 'fabric';
+    } else if (normTab === 'sewing') {
+      modalSelect.value = 'swing';
+    } else {
+      modalSelect.value = 'finishing';
     }
     onModalReportTypeChange(modalSelect.value);
   }
@@ -980,6 +1017,213 @@ function parseFabricStoreData(rawText) {
 }
 
 // ==============================================================================
+// 7.5 SWING / SEWING FLOOR TYPE REPORT DATA PARSER
+// ==============================================================================
+function parseSwingFloorData(rawText) {
+  const rows = tokenizeTableData(rawText);
+  if (!rows || rows.length < 3) {
+    throw new Error('Not enough data rows found in Swing report.');
+  }
+
+  const result = {
+    metadata: {
+      floorResponsible: '',
+      erpResponsible: '',
+      floor: 'BURIGANGA - SEWING',
+      date: '',
+      totalLines: 0,
+      runningLines: 0
+    },
+    lines: [],
+    summary: {
+      todayProduction: null,
+      todayEfficiency: null,
+      pvsOutput: null,
+      pvsEfficiency: null
+    }
+  };
+
+  let headerRowIndex = -1;
+  let subheaderRowIndex = -1;
+
+  for (let r = 0; r < Math.min(rows.length, 10); r++) {
+    const row = rows[r];
+    const rowStr = row.join(' ').toLowerCase();
+
+    if (rowStr.includes('floor responsible')) {
+      if (rows[r + 1] && rows[r + 1][0]) result.metadata.floorResponsible = rows[r + 1][0];
+    }
+    if (rowStr.includes('erp responsible')) {
+      for (let c = 0; c < row.length; c++) {
+        if (/erp\s*responsible/i.test(row[c])) {
+          if (rows[r + 1] && rows[r + 1][c]) result.metadata.erpResponsible = rows[r + 1][c];
+        }
+      }
+    }
+    if (rowStr.includes('floor :') || rowStr.includes('floor:')) {
+      for (const cell of row) {
+        if (/floor\s*:/i.test(cell)) result.metadata.floor = cell.replace(/floor\s*:\s*/i, '').trim();
+      }
+    }
+    if (rowStr.includes('date') && !rowStr.includes('update')) {
+      for (let c = 0; c < row.length; c++) {
+        if (/date\s*:/i.test(row[c])) {
+          for (let k = c + 1; k < Math.min(row.length, c + 8); k++) {
+            if (row[k] && /\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4}/.test(row[k])) {
+              result.metadata.date = row[k];
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (rowStr.includes('total line')) {
+      for (let c = 0; c < row.length; c++) {
+        if (/total\s*line/i.test(row[c])) {
+          for (let k = c + 1; k < Math.min(row.length, c + 6); k++) {
+            if (/^\d+$/.test(row[k])) {
+              result.metadata.totalLines = parseInt(row[k], 10);
+              break;
+            }
+          }
+        }
+        if (/running\s*line/i.test(row[c])) {
+          for (let k = c + 1; k < Math.min(row.length, c + 6); k++) {
+            if (row[k]) {
+              const m = row[k].match(/(\d+)/);
+              if (m) {
+                result.metadata.runningLines = parseInt(m[1], 10);
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (rowStr.includes('line') && (rowStr.includes('buyer') || rowStr.includes('style name'))) {
+      headerRowIndex = r;
+      if (rows[r + 1] && (rows[r + 1].join(' ').toLowerCase().includes('op') || rows[r + 1].join(' ').toLowerCase().includes('1st'))) {
+        subheaderRowIndex = r + 1;
+      }
+      break;
+    }
+  }
+
+  if (headerRowIndex === -1) {
+    throw new Error('Could not detect Swing report table headers (PM, LINE, BUYER, STYLE NAME).');
+  }
+
+  const parseNum = (v) => {
+    if (v === undefined || v === null || v === '') return null;
+    const n = parseFloat(String(v).replace(/,/g, '').trim());
+    return isNaN(n) ? null : n;
+  };
+
+  const startDataRow = (subheaderRowIndex !== -1 ? subheaderRowIndex : headerRowIndex) + 1;
+  let currentPM = '';
+  let currentPMEffName = '';
+  let currentPMEffVal = null;
+
+  for (let r = startDataRow; r < rows.length; r++) {
+    const row = rows[r];
+    const rowStr = row.join(' ').toLowerCase();
+
+    if (rowStr.includes('today production')) {
+      result.summary.todayProduction = row;
+      continue;
+    }
+    if (rowStr.includes('today efficiency')) {
+      result.summary.todayEfficiency = row;
+      continue;
+    }
+    if (rowStr.includes('pvs output') || rowStr.includes('previous output')) {
+      result.summary.pvsOutput = row;
+      continue;
+    }
+    if (rowStr.includes('pvs efficiency') || rowStr.includes('previous efficiency')) {
+      result.summary.pvsEfficiency = row;
+      continue;
+    }
+    if (rowStr.includes('daily p/o wise') || rowStr.includes('update summary') || rowStr.includes('note')) {
+      break;
+    }
+
+    const lineId = row[1];
+    if (!lineId || lineId.trim() === '') continue;
+
+    const isNewPM = row[0] && row[0].trim();
+    if (isNewPM) {
+      currentPM = row[0].trim();
+    }
+    if (row[37] && row[37].trim()) {
+      currentPMEffName = row[37].trim();
+      currentPMEffVal = parseNum(row[38]);
+    }
+
+    const item = {
+      pm: currentPM,
+      pmDisplay: row[0] || '',
+      isGroupStart: isNewPM ? true : false,
+      line: lineId,
+      buyer: row[2] || '',
+      styleName: row[3] || '',
+      item: row[4] || '',
+      proDay: row[5] || '',
+      manpower: {
+        op: parseNum(row[6]) || 0,
+        hl: parseNum(row[7]) || 0,
+        iron: parseNum(row[8]) || 0,
+        total: parseNum(row[9]) || 0
+      },
+      smv: parseNum(row[10]) || 0,
+      tgPercent: parseNum(row[11]) || 0,
+      target100: parseNum(row[12]) || 0,
+      wh: parseNum(row[13]) || 0,
+      ieTrg: parseNum(row[14]) || 0,
+      ieHTrg: parseNum(row[15]) || 0,
+      cmmtTgt: parseNum(row[16]) || 0,
+      hTgt: parseNum(row[17]) || 0,
+      hourlyProd: [
+        parseNum(row[18]) || 0,
+        parseNum(row[19]) || 0,
+        parseNum(row[20]) || 0,
+        parseNum(row[21]) || 0,
+        parseNum(row[22]) || 0,
+        parseNum(row[23]) || 0,
+        parseNum(row[24]) || 0,
+        parseNum(row[25]) || 0,
+        parseNum(row[26]) || 0,
+        parseNum(row[27]) || 0,
+        parseNum(row[28]) || 0
+      ],
+      average: parseNum(row[29]) || 0,
+      totalProduction: parseNum(row[30]) || 0,
+      todayTgt: parseNum(row[31]) || 0,
+      tgtShEx: parseNum(row[32]) || 0,
+      wHour: parseNum(row[33]) || 0,
+      efficiencyPercent: parseNum(row[34]) || 0,
+      availMinute: parseNum(row[35]) || 0,
+      produceMinute: parseNum(row[36]) || 0,
+      pmWiseEffName: currentPMEffName,
+      pmWiseEffPercent: currentPMEffVal,
+      inHand: row[39] || '',
+      remarks: row[40] || '',
+      rawRow: row
+    };
+
+    result.lines.push(item);
+  }
+
+  if (result.metadata.totalLines === 0) result.metadata.totalLines = result.lines.length;
+  if (result.metadata.runningLines === 0) {
+    result.metadata.runningLines = result.lines.filter(l => l.totalProduction > 0 || l.manpower.total > 0).length;
+  }
+
+  return result;
+}
+
+// ==============================================================================
 // 8. PHASE 4: RENDERER FOR FINISHING FLOOR VIEW
 // ==============================================================================
 function renderFinishingModule() {
@@ -1488,6 +1732,452 @@ function renderFabricTableRows(data) {
       </tr>
     `;
   }).join('');
+}
+
+// ==============================================================================
+// 9.5 PHASE 4: RENDERER FOR SWING / SEWING FLOOR TYPE REPORT VIEW
+// ==============================================================================
+function setSwingFilter(filterMode) {
+  swingFilterMode = filterMode;
+  renderSwingModule();
+}
+
+function filterSwingTable() {
+  const input = document.getElementById('swingSearchInput');
+  swingSearchTerm = input ? input.value.trim().toLowerCase() : '';
+  renderSwingModule();
+}
+
+function renderSwingModule() {
+  const blankState = document.getElementById('swingBlankState');
+  const scrollViewport = document.getElementById('swingTableScrollViewport');
+  const summaryFooter = document.getElementById('swingSummaryFooter');
+  const tbody = document.getElementById('swingTableBody');
+  const tfoot = document.getElementById('swingTableFoot');
+
+  if (!swingData || !Array.isArray(swingData.lines) || swingData.lines.length === 0) {
+    if (blankState) blankState.classList.remove('hidden');
+    if (scrollViewport) scrollViewport.classList.add('hidden');
+    if (summaryFooter) summaryFooter.classList.add('hidden');
+
+    const kpiProd = document.getElementById('kpiSwingProd');
+    const kpiTarget = document.getElementById('kpiSwingTarget');
+    const kpiEff = document.getElementById('kpiSwingEff');
+    const kpiLines = document.getElementById('kpiSwingActiveLines');
+    if (kpiProd) kpiProd.textContent = '0';
+    if (kpiTarget) kpiTarget.textContent = '0';
+    if (kpiEff) kpiEff.textContent = '0.0%';
+    if (kpiLines) kpiLines.textContent = '0 / 0';
+    return;
+  }
+
+  if (blankState) blankState.classList.add('hidden');
+  if (scrollViewport) scrollViewport.classList.remove('hidden');
+  if (summaryFooter) summaryFooter.classList.remove('hidden');
+
+  const meta = swingData.metadata || {};
+  const floorTitleEl = document.getElementById('swingFloorTitle');
+  const floorRespEl = document.getElementById('swingFloorResp');
+  const erpRespEl = document.getElementById('swingErpResp');
+  const totalLinesBadge = document.getElementById('swingTotalLinesBadge');
+  const runningLinesBadge = document.getElementById('swingRunningLinesBadge');
+  const dateBadge = document.getElementById('swingDateBadge');
+
+  if (floorTitleEl) floorTitleEl.textContent = meta.floor || 'BURIGANGA - SEWING';
+  if (floorRespEl) floorRespEl.textContent = meta.floorResponsible || '—';
+  if (erpRespEl) erpRespEl.textContent = meta.erpResponsible || '—';
+  if (totalLinesBadge) totalLinesBadge.textContent = meta.totalLines || swingData.lines.length;
+  if (runningLinesBadge) runningLinesBadge.textContent = meta.runningLines || swingData.lines.filter(l => l.totalProduction > 0 || l.manpower.total > 0).length;
+  if (dateBadge) dateBadge.textContent = meta.date || 'Today';
+
+  // 1. Dynamic PM Filter Pills
+  const filterContainer = document.getElementById('swingFilterButtons');
+  if (filterContainer) {
+    const pms = [];
+    swingData.lines.forEach(l => {
+      if (l.pm && !pms.includes(l.pm)) pms.push(l.pm);
+    });
+
+    const isAll = swingFilterMode === 'ALL';
+    const isRunning = swingFilterMode === 'Running';
+
+    let html = `
+      <button onclick="setSwingFilter('ALL')" id="fltSwingAll" class="px-2.5 py-1 rounded ${isAll ? 'bg-white text-emerald-950 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'} cursor-pointer">ALL (${swingData.lines.length})</button>
+      <button onclick="setSwingFilter('Running')" id="fltSwingRunning" class="px-2.5 py-1 rounded ${isRunning ? 'bg-white text-emerald-950 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'} cursor-pointer">Running (${meta.runningLines || swingData.lines.filter(l => l.totalProduction > 0 || l.manpower.total > 0).length})</button>
+    `;
+
+    pms.forEach(pm => {
+      const pmCount = swingData.lines.filter(l => l.pm === pm).length;
+      const isActive = swingFilterMode === pm;
+      html += `
+        <button onclick="setSwingFilter('${pm.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded ${isActive ? 'bg-white text-emerald-950 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'} cursor-pointer">
+          ${pm} (${pmCount})
+        </button>
+      `;
+    });
+    filterContainer.innerHTML = html;
+  }
+
+  // 2. Compute KPI Metrics (Using TODAY PRODUCTION row if present, or aggregating lines)
+  const todayRow = swingData.summary && swingData.summary.todayProduction;
+  const parseCellNum = (v) => {
+    if (v === undefined || v === null || v === '') return 0;
+    const n = parseFloat(String(v).replace(/,/g, '').trim());
+    return isNaN(n) ? 0 : n;
+  };
+
+  let totalProd = 0;
+  let todayTgt = 0;
+  let variance = 0;
+  let totalCmmt = 0;
+  let avgHourly = 0;
+  let floorEff = 0;
+  let avgSmv = 0;
+  let avgTg = 0;
+  let totalMp = 0;
+  let opMp = 0;
+  let hlMp = 0;
+  let ironMp = 0;
+
+  if (todayRow) {
+    opMp = parseCellNum(todayRow[6]);
+    hlMp = parseCellNum(todayRow[7]);
+    ironMp = parseCellNum(todayRow[8]);
+    totalMp = parseCellNum(todayRow[9]);
+    avgSmv = parseCellNum(todayRow[10]);
+    avgTg = parseCellNum(todayRow[11]);
+    totalCmmt = parseCellNum(todayRow[16]);
+    avgHourly = parseCellNum(todayRow[29]);
+    totalProd = parseCellNum(todayRow[30]);
+    todayTgt = parseCellNum(todayRow[31]);
+    variance = parseCellNum(todayRow[32]);
+    floorEff = parseCellNum(todayRow[34]);
+  } else {
+    swingData.lines.forEach(l => {
+      totalProd += l.totalProduction;
+      todayTgt += l.todayTgt;
+      variance += l.tgtShEx;
+      totalCmmt += l.cmmtTgt;
+      totalMp += l.manpower.total;
+      opMp += l.manpower.op;
+      hlMp += l.manpower.hl;
+      ironMp += l.manpower.iron;
+    });
+    avgHourly = totalProd / 4;
+    floorEff = todayTgt > 0 ? (totalProd / todayTgt) : 0;
+  }
+
+  const kpiProd = document.getElementById('kpiSwingProd');
+  const kpiVarianceTag = document.getElementById('kpiSwingVarianceTag');
+  const kpiPercentTag = document.getElementById('kpiSwingPercentTag');
+  const kpiTarget = document.getElementById('kpiSwingTarget');
+  const kpiHourlySub = document.getElementById('kpiSwingHourlySub');
+  const kpiCmmtSub = document.getElementById('kpiSwingCmmtSub');
+  const kpiEff = document.getElementById('kpiSwingEff');
+  const kpiEffBadge = document.getElementById('kpiSwingEffBadge');
+  const kpiSmvSub = document.getElementById('kpiSwingSmvSub');
+  const kpiLines = document.getElementById('kpiSwingActiveLines');
+  const kpiMpSub = document.getElementById('kpiSwingMpSub');
+  const kpiShiftDate = document.getElementById('kpiSwingShiftDate');
+
+  if (kpiProd) kpiProd.textContent = totalProd.toLocaleString();
+  if (kpiVarianceTag) {
+    kpiVarianceTag.textContent = `${variance < 0 ? '-' : '+'}${Math.abs(Math.round(variance)).toLocaleString()} pcs variance`;
+    kpiVarianceTag.className = variance < 0 ? 'font-bold text-rose-600' : 'font-bold text-emerald-700';
+  }
+  if (kpiPercentTag) {
+    const pct = todayTgt > 0 ? Math.round((totalProd / todayTgt) * 100) : 0;
+    kpiPercentTag.textContent = `${pct}% of target`;
+  }
+  if (kpiTarget) kpiTarget.textContent = Math.round(todayTgt).toLocaleString();
+  if (kpiHourlySub) kpiHourlySub.textContent = `${Math.round(avgHourly).toLocaleString()} pcs/hr`;
+  if (kpiCmmtSub) kpiCmmtSub.textContent = `CMMT: ${Math.round(totalCmmt).toLocaleString()}`;
+  if (kpiEff) {
+    const effPct = floorEff > 1.5 ? floorEff : (floorEff * 100);
+    kpiEff.textContent = `${effPct.toFixed(1)}%`;
+  }
+  if (kpiEffBadge) {
+    const effPct = floorEff > 1.5 ? floorEff : (floorEff * 100);
+    if (effPct >= 50) {
+      kpiEffBadge.className = 'bg-emerald-100 text-emerald-800 text-[9.5px] font-bold px-1.5 py-0.5 rounded leading-none';
+      kpiEffBadge.textContent = 'HIGH EFF';
+    } else if (effPct >= 30) {
+      kpiEffBadge.className = 'bg-amber-100 text-amber-800 text-[9.5px] font-bold px-1.5 py-0.5 rounded leading-none';
+      kpiEffBadge.textContent = 'MODERATE';
+    } else {
+      kpiEffBadge.className = 'bg-rose-100 text-rose-800 text-[9.5px] font-bold px-1.5 py-0.5 rounded leading-none';
+      kpiEffBadge.textContent = 'LOW EFF';
+    }
+  }
+  if (kpiSmvSub) {
+    const tgDisplay = avgTg > 1 ? avgTg.toFixed(1) : (avgTg * 100).toFixed(1);
+    kpiSmvSub.textContent = `Avg SMV: ${avgSmv.toFixed(2)} min • TG: ${tgDisplay}%`;
+  }
+  if (kpiLines) kpiLines.textContent = `${meta.runningLines || swingData.lines.length} / ${meta.totalLines || swingData.lines.length}`;
+  if (kpiMpSub) kpiMpSub.textContent = `${totalMp.toLocaleString()} Total MP (OP: ${opMp}, HL: ${hlMp}, IR: ${ironMp})`;
+  if (kpiShiftDate) kpiShiftDate.textContent = meta.date || 'Today';
+
+  // 3. Filter lines based on PM/status and search input
+  let filtered = swingData.lines.filter(l => {
+    if (swingFilterMode === 'Running') {
+      if (l.totalProduction === 0 && l.manpower.total === 0) return false;
+    } else if (swingFilterMode !== 'ALL') {
+      if (l.pm.toLowerCase() !== swingFilterMode.toLowerCase()) return false;
+    }
+    if (swingSearchTerm) {
+      const q = swingSearchTerm;
+      const matches = (
+        l.line.toLowerCase().includes(q) ||
+        l.buyer.toLowerCase().includes(q) ||
+        l.styleName.toLowerCase().includes(q) ||
+        l.item.toLowerCase().includes(q) ||
+        l.pm.toLowerCase().includes(q) ||
+        l.remarks.toLowerCase().includes(q)
+      );
+      if (!matches) return false;
+    }
+    return true;
+  });
+
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="41" class="text-center py-8 text-slate-400 font-semibold">
+          No lines match filter criteria "${swingFilterMode}" / "${swingSearchTerm}".
+        </td>
+      </tr>
+    `;
+  } else {
+    tbody.innerHTML = filtered.map((line, idx) => {
+      const isGroupStart = line.isGroupStart || (idx > 0 && line.pm !== filtered[idx - 1].pm);
+      const groupStartClass = isGroupStart ? 'swing-pm-group-start' : '';
+
+      // PM column rendering
+      let pmContent = '';
+      if (line.pmDisplay) {
+        pmContent = `<div class="flex items-center gap-1 font-bold text-slate-900"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span><span>${line.pmDisplay}</span></div>`;
+      } else if (line.pm) {
+        pmContent = `<span class="text-slate-400 text-[10px] pl-2">${line.pm}</span>`;
+      } else {
+        pmContent = '—';
+      }
+
+      // Efficiency badge
+      const effVal = line.efficiencyPercent;
+      const effPct = effVal > 1.5 ? effVal : (effVal * 100);
+      let effBadgeClass = 'bg-rose-100 text-rose-900';
+      if (effPct >= 50) effBadgeClass = 'bg-emerald-100 text-emerald-900';
+      else if (effPct >= 30) effBadgeClass = 'bg-amber-100 text-amber-900';
+
+      // PM-wise efficiency badge
+      let pmEffContent = '—';
+      if (line.pmWiseEffPercent !== null && line.pmWiseEffPercent !== undefined) {
+        const pmEffPct = line.pmWiseEffPercent > 1.5 ? line.pmWiseEffPercent : (line.pmWiseEffPercent * 100);
+        let pmBadgeClass = pmEffPct >= 40 ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900';
+        pmEffContent = `<span class="px-1.5 py-0.5 rounded font-bold text-[10px] ${pmBadgeClass}">${pmEffPct.toFixed(1)}%</span>`;
+      }
+
+      // Variance styling
+      const varVal = line.tgtShEx;
+      const varClass = varVal < 0 ? 'text-rose-700 font-bold' : (varVal > 0 ? 'text-emerald-700 font-bold' : 'text-slate-400');
+      const varText = varVal < 0 ? Math.round(varVal).toLocaleString() : (varVal > 0 ? `+${Math.round(varVal).toLocaleString()}` : '0');
+
+      // Hourly cells
+      const hourlyHtml = line.hourlyProd.map(h => {
+        if (h > 0) return `<td class="text-center font-mono font-bold text-slate-900">${h}</td>`;
+        return `<td class="text-center font-mono text-slate-300">-</td>`;
+      }).join('');
+
+      return `
+        <tr class="border-b border-slate-200 transition ${groupStartClass}">
+          <td class="swing-sticky-col-pm">${pmContent}</td>
+          <td class="swing-sticky-col-line text-center">
+            <span class="inline-flex items-center justify-center w-6 h-5 rounded bg-emerald-950 text-white font-black text-xs shadow-xs">${line.line}</span>
+          </td>
+          <td class="font-bold text-slate-800">${line.buyer || '—'}</td>
+          <td class="font-semibold text-slate-700 max-w-[200px] truncate" title="${line.styleName}">${line.styleName || '—'}</td>
+          <td class="text-center text-slate-600 font-medium">${line.item || '—'}</td>
+          <td class="text-center font-bold text-slate-700 font-mono">${line.proDay !== '' ? line.proDay : '—'}</td>
+          <!-- Manpower breakdown -->
+          <td class="text-right font-mono">${line.manpower.op || '0'}</td>
+          <td class="text-right font-mono">${line.manpower.hl || '0'}</td>
+          <td class="text-right font-mono">${line.manpower.iron || '0'}</td>
+          <td class="text-right font-mono font-bold text-amber-950 bg-amber-50/70">${line.manpower.total || '0'}</td>
+          <!-- Metrics -->
+          <td class="text-right font-mono">${line.smv ? line.smv.toFixed(2) : '—'}</td>
+          <td class="text-right font-mono">${line.tgPercent ? (line.tgPercent > 1 ? line.tgPercent.toFixed(0) : (line.tgPercent * 100).toFixed(0)) + '%' : '—'}</td>
+          <td class="text-right font-mono">${line.target100 ? Math.round(line.target100).toLocaleString() : '—'}</td>
+          <td class="text-center font-mono">${line.wh || '—'}</td>
+          <td class="text-right font-mono">${line.ieTrg ? Math.round(line.ieTrg).toLocaleString() : '—'}</td>
+          <td class="text-right font-mono">${line.ieHTrg ? line.ieHTrg.toFixed(1) : '—'}</td>
+          <td class="text-right font-mono font-bold">${line.cmmtTgt ? line.cmmtTgt.toLocaleString() : '—'}</td>
+          <td class="text-right font-mono">${line.hTgt ? Math.round(line.hTgt).toLocaleString() : '—'}</td>
+          <!-- Hourly Production (11 hours) -->
+          ${hourlyHtml}
+          <!-- Totals & Performance -->
+          <td class="text-right font-mono font-bold text-slate-800">${line.average ? line.average.toFixed(1) : '0'}</td>
+          <td class="text-right font-mono font-black text-emerald-800 bg-emerald-50/80">${line.totalProduction.toLocaleString()}</td>
+          <td class="text-right font-mono">${line.todayTgt ? Math.round(line.todayTgt).toLocaleString() : '0'}</td>
+          <td class="text-right font-mono ${varClass}">${varText}</td>
+          <td class="text-center font-mono">${line.wHour || '0'}</td>
+          <td class="text-center"><span class="px-1.5 py-0.5 rounded font-black text-[10px] ${effBadgeClass}">${effPct.toFixed(1)}%</span></td>
+          <td class="text-right font-mono text-slate-600">${line.availMinute ? line.availMinute.toLocaleString() : '0'}</td>
+          <td class="text-right font-mono text-slate-600">${line.produceMinute ? Math.round(line.produceMinute).toLocaleString() : '0'}</td>
+          <!-- PM Wise Efficiency -->
+          <td class="font-semibold text-slate-800">${line.pmWiseEffName || '—'}</td>
+          <td class="text-center">${pmEffContent}</td>
+          <td class="text-center font-mono">${line.inHand || '—'}</td>
+          <td class="text-slate-600 italic text-[10.5px]">${line.remarks || ''}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 4. Render Table Foot Summary Rows
+  if (tfoot) {
+    let footHtml = '';
+
+    // Row A: TODAY PRODUCTION >>>
+    if (todayRow) {
+      const hourlySummary = [];
+      for (let c = 18; c <= 28; c++) {
+        const val = parseCellNum(todayRow[c]);
+        hourlySummary.push(`<td class="text-center font-mono font-black ${val > 0 ? 'text-emerald-950' : 'text-slate-400'}">${val > 0 ? val.toLocaleString() : '0'}</td>`);
+      }
+
+      const effVal = parseCellNum(todayRow[34]);
+      const effPct = effVal > 1.5 ? effVal : (effVal * 100);
+
+      footHtml += `
+        <tr class="bg-emerald-50/90 text-emerald-950 font-black border-t-2 border-emerald-800">
+          <td colspan="6" class="py-2.5 px-3 text-left font-black tracking-wide uppercase bg-emerald-100 text-emerald-950 sticky left-0 z-10">
+            TODAY PRODUCTION &gt;&gt;&gt;
+          </td>
+          <!-- Manpower total -->
+          <td class="text-right font-mono">${parseCellNum(todayRow[6]).toLocaleString()}</td>
+          <td class="text-right font-mono">${parseCellNum(todayRow[7]).toLocaleString()}</td>
+          <td class="text-right font-mono">${parseCellNum(todayRow[8]).toLocaleString()}</td>
+          <td class="text-right font-mono font-black text-amber-950 bg-amber-100/70">${parseCellNum(todayRow[9]).toLocaleString()}</td>
+          <!-- Metrics -->
+          <td class="text-right font-mono">${parseCellNum(todayRow[10]).toFixed(2)}</td>
+          <td class="text-right font-mono">${(parseCellNum(todayRow[11]) * 100).toFixed(1)}%</td>
+          <td class="text-right font-mono">${Math.round(parseCellNum(todayRow[12])).toLocaleString()}</td>
+          <td class="text-center font-mono">${parseCellNum(todayRow[13]).toFixed(1)}</td>
+          <td class="text-right font-mono">${Math.round(parseCellNum(todayRow[14])).toLocaleString()}</td>
+          <td class="text-right font-mono">${Math.round(parseCellNum(todayRow[15])).toLocaleString()}</td>
+          <td class="text-right font-mono font-black">${Math.round(parseCellNum(todayRow[16])).toLocaleString()}</td>
+          <td class="text-right font-mono">${Math.round(parseCellNum(todayRow[17])).toLocaleString()}</td>
+          <!-- Hourly Totals -->
+          ${hourlySummary.join('')}
+          <!-- Final Metrics -->
+          <td class="text-right font-mono font-bold">${parseCellNum(todayRow[29]).toFixed(1)}</td>
+          <td class="text-right font-mono font-black text-emerald-900 bg-emerald-200/80">${parseCellNum(todayRow[30]).toLocaleString()}</td>
+          <td class="text-right font-mono font-bold">${Math.round(parseCellNum(todayRow[31])).toLocaleString()}</td>
+          <td class="text-right font-mono font-black text-rose-700">${Math.round(parseCellNum(todayRow[32])).toLocaleString()}</td>
+          <td class="text-center font-mono">${parseCellNum(todayRow[33])}</td>
+          <td class="text-center"><span class="px-2 py-0.5 rounded font-black text-[11px] bg-amber-100 text-amber-900">${effPct.toFixed(1)}%</span></td>
+          <td class="text-right font-mono">${Math.round(parseCellNum(todayRow[35])).toLocaleString()}</td>
+          <td class="text-right font-mono">${Math.round(parseCellNum(todayRow[36])).toLocaleString()}</td>
+          <td colspan="3" class="text-center text-slate-500 font-normal italic">Floor Summary</td>
+        </tr>
+      `;
+    }
+
+    // Row B: Today Efficiency %
+    if (swingData.summary && swingData.summary.todayEfficiency) {
+      const effRow = swingData.summary.todayEfficiency;
+      const hourlyEff = [];
+      for (let c = 18; c <= 28; c++) {
+        const val = parseCellNum(effRow[c]);
+        const pct = val > 1.5 ? val : (val * 100);
+        hourlyEff.push(`<td class="text-center font-mono font-bold ${pct > 0 ? 'text-emerald-800' : 'text-slate-300'}">${pct > 0 ? pct.toFixed(1) + '%' : '0%'}</td>`);
+      }
+      const totalDayEff = parseCellNum(effRow[29]) || parseCellNum(effRow[30]);
+      const totalDayEffPct = totalDayEff > 1.5 ? totalDayEff : (totalDayEff * 100);
+
+      footHtml += `
+        <tr class="bg-slate-50 text-slate-700 text-[10.5px] border-b border-slate-200 font-semibold">
+          <td colspan="18" class="py-1.5 px-3 text-right uppercase tracking-wider text-slate-600 font-bold sticky left-0 bg-slate-50">
+            Today Efficiency %
+          </td>
+          ${hourlyEff.join('')}
+          <td class="text-right font-mono font-bold text-slate-800">${totalDayEffPct > 0 ? totalDayEffPct.toFixed(1) + '%' : '—'}</td>
+          <td colspan="11" class="text-slate-400 italic font-normal">Hourly efficiency achieved</td>
+        </tr>
+      `;
+    }
+
+    // Row C: Previous Output
+    if (swingData.summary && swingData.summary.pvsOutput) {
+      const pvsRow = swingData.summary.pvsOutput;
+      const hourlyPvs = [];
+      for (let c = 18; c <= 28; c++) {
+        const val = parseCellNum(pvsRow[c]);
+        hourlyPvs.push(`<td class="text-center font-mono ${val > 0 ? 'text-slate-700 font-semibold' : 'text-slate-300'}">${val > 0 ? val.toLocaleString() : '-'}</td>`);
+      }
+      const pvsTotal = parseCellNum(pvsRow[29]) || parseCellNum(pvsRow[30]);
+
+      footHtml += `
+        <tr class="bg-white text-slate-600 text-[10.5px] border-b border-slate-200">
+          <td colspan="18" class="py-1 px-3 text-right uppercase tracking-wider text-slate-500 font-bold sticky left-0 bg-white">
+            Pvs Output
+          </td>
+          ${hourlyPvs.join('')}
+          <td class="text-right font-mono font-bold text-slate-800">${pvsTotal > 0 ? pvsTotal.toLocaleString() : '—'}</td>
+          <td colspan="11" class="text-slate-400 italic">Previous day actual hourly output</td>
+        </tr>
+      `;
+    }
+
+    // Row D: Previous Efficiency %
+    if (swingData.summary && swingData.summary.pvsEfficiency) {
+      const pvsEffRow = swingData.summary.pvsEfficiency;
+      const hourlyPvsEff = [];
+      for (let c = 18; c <= 28; c++) {
+        const val = parseCellNum(pvsEffRow[c]);
+        const pct = val > 1.5 ? val : (val * 100);
+        hourlyPvsEff.push(`<td class="text-center font-mono ${pct > 0 ? 'text-slate-700 font-semibold' : 'text-slate-300'}">${pct > 0 ? pct.toFixed(1) + '%' : '0%'}</td>`);
+      }
+      const pvsTotalEff = parseCellNum(pvsEffRow[29]) || parseCellNum(pvsEffRow[30]);
+      const pvsTotalEffPct = pvsTotalEff > 1.5 ? pvsTotalEff : (pvsTotalEff * 100);
+
+      footHtml += `
+        <tr class="bg-white text-slate-600 text-[10.5px] border-b border-slate-200">
+          <td colspan="18" class="py-1 px-3 text-right uppercase tracking-wider text-slate-500 font-bold sticky left-0 bg-white">
+            Pvs Efficiency %
+          </td>
+          ${hourlyPvsEff.join('')}
+          <td class="text-right font-mono font-bold text-slate-800">${pvsTotalEffPct > 0 ? pvsTotalEffPct.toFixed(1) + '%' : '—'}</td>
+          <td colspan="11" class="text-slate-400 italic">Previous day actual efficiency %</td>
+        </tr>
+      `;
+    }
+
+    tfoot.innerHTML = footHtml;
+  }
+
+  // 5. Update Fixed Summary Footer
+  const sumActive = document.getElementById('sumSwingActiveLines');
+  const sumMP = document.getElementById('sumSwingTotalMP');
+  const sumTarget = document.getElementById('sumSwingTarget');
+  const sumProd = document.getElementById('sumSwingTotalProd');
+  const sumVariance = document.getElementById('sumSwingVariance');
+  const sumFloorEff = document.getElementById('sumSwingFloorEff');
+
+  if (sumActive) sumActive.textContent = `${meta.runningLines || swingData.lines.length} Lines`;
+  if (sumMP) sumMP.textContent = `${totalMp.toLocaleString()} MP`;
+  if (sumTarget) sumTarget.textContent = `${Math.round(todayTgt).toLocaleString()} pcs`;
+  if (sumProd) sumProd.textContent = `${totalProd.toLocaleString()} pcs`;
+  if (sumVariance) {
+    sumVariance.textContent = `${variance < 0 ? '-' : '+'}${Math.abs(Math.round(variance)).toLocaleString()} pcs`;
+    sumVariance.className = variance < 0 ? 'font-bold text-rose-700' : 'font-bold text-emerald-800';
+  }
+  if (sumFloorEff) {
+    const effPct = floorEff > 1.5 ? floorEff : (floorEff * 100);
+    sumFloorEff.textContent = `${effPct.toFixed(1)}%`;
+  }
 }
 
 // ==============================================================================
@@ -2116,6 +2806,21 @@ function handleServerSync(serverState) {
     }
   }
 
+  // 3. Sync Swing Data
+  if (serverState.swingData !== undefined) {
+    const incomingStr = JSON.stringify(serverState.swingData);
+    const currentStr = JSON.stringify(swingData);
+    if (incomingStr !== currentStr) {
+      swingData = serverState.swingData;
+      if (swingData) {
+        localStorage.setItem('al_muslim_swing_data', incomingStr);
+      } else {
+        localStorage.removeItem('al_muslim_swing_data');
+      }
+      needsRerender = true;
+    }
+  }
+
   // 3. Sync Active Module View
   // Preserves the user's locally selected module across reloads and direct visits.
   // Only synchronizes module if no local preference exists OR if this is an explicit live update from LAN peer (incomingVer > previousSyncVersion).
@@ -2179,6 +2884,11 @@ function handleServerReset(payload) {
     fabricData = null;
     localStorage.removeItem('al_muslim_fabric_data');
     if (currentModule === 'fabric') renderFabricModule();
+  }
+  if (mod === 'swing' || mod === 'sewing' || mod === 'all') {
+    swingData = null;
+    localStorage.removeItem('al_muslim_swing_data');
+    if (currentModule === 'swing' || currentModule === 'sewing') renderSwingModule();
   }
 }
 
@@ -2634,6 +3344,8 @@ function onModalReportTypeChange(type) {
     helper.innerHTML = 'Expected: <code>Line | Buyer | Style | Process | Manpower | SMV | Day | Target/Hr | 1st - 11th Hours | Total Prod | Target | Eff% | Remarks</code>';
   } else if (type === 'fabric') {
     helper.innerHTML = 'Expected: <code>SL | Buyer | Style | Supplier | Ref No | Color | Fabric Construction | Opening | Last Rcvd | Balance | Rolls | Rack | Merch-Name | Status</code>';
+  } else if (type === 'swing' || type === 'sewing') {
+    helper.innerHTML = 'Expected: <code>Floor/ERP Responsible | PM | LINE | BUYER | STYLE | Manpower (OP, HL, IRON, TOTAL) | Hourly (1st-12th) | Total Prod | Target | Eff% | PM Eff% | Remarks</code>';
   } else if (type === 'cutting') {
     helper.innerHTML = 'Expected: <code>Line | Buyer | Style | Cut Plan | Target | Actual Cut | Variance | Efficiency | Remarks</code>';
   } else {
@@ -2668,6 +3380,10 @@ async function processAndSaveModalData() {
       parsed = parseFinishingFloorData(rawText);
       finishingData = parsed;
       localStorage.setItem('al_muslim_finishing_data', JSON.stringify(finishingData));
+    } else if (type === 'swing' || type === 'sewing') {
+      parsed = parseSwingFloorData(rawText);
+      swingData = parsed;
+      localStorage.setItem('al_muslim_swing_data', JSON.stringify(swingData));
     } else {
       parsed = parseFabricStoreData(rawText);
       fabricData = parsed;
@@ -2696,10 +3412,16 @@ async function processAndSaveModalData() {
       if (res.ok) {
         const json = await res.json();
         if (json.version) serverSyncVersion = json.version;
+        let countMsg = '';
+        if (type === 'finishing') {
+          countMsg = `✓ Successfully processed ${parsed.lines.length} lines`;
+        } else if (type === 'swing' || type === 'sewing') {
+          countMsg = `✓ Successfully processed ${parsed.lines.length} sewing lines`;
+        } else {
+          countMsg = `✓ Successfully processed ${parsed.length} fabric store items`;
+        }
         showModalFeedback(
-          type === 'finishing'
-            ? `✓ Successfully processed ${parsed.lines.length} lines and broadcasted across all LAN screens!`
-            : `✓ Successfully processed ${parsed.length} fabric store items and broadcasted across all LAN screens!`,
+          `${countMsg} and broadcasted across all LAN screens!`,
           'success'
         );
       } else {
@@ -2740,7 +3462,14 @@ function handleModalFileUpload(event) {
         const workbook = XLSX.read(data, { type: 'array' });
         
         let targetSheetName = workbook.SheetNames[0];
+        const modalSelect = document.getElementById('modalReportTypeSelect');
+        const activeType = modalSelect ? modalSelect.value : currentModule;
+
         for (const sname of workbook.SheetNames) {
+          if ((activeType === 'swing' || activeType === 'sewing') && (/sewing|swing|line\s*wise/i.test(sname))) {
+            targetSheetName = sname;
+            break;
+          }
           if (/^\d{2}-\d{2}/.test(sname) || /finishing/i.test(sname) || /floor/i.test(sname)) {
             targetSheetName = sname;
             break;

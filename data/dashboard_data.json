@@ -1,13 +1,13 @@
 {
-  "version": 2,
-  "lastUpdated": "2026-11-01T04:33:56.004Z",
-  "lastUpdatedBy": "system",
-  "currentModule": "finishing",
+  "version": 6,
+  "lastUpdated": "2026-11-01T05:53:46.325Z",
+  "lastUpdatedBy": "192.168.108.54",
+  "currentModule": "swing",
   "finishingData": null,
   "fabricData": null,
   "timingSettings": {
     "posterIntervalSeconds": 30,
     "noticeDurationSeconds": 10,
-    "scrollSpeed": 8
+    "scrollSpeed": 27
   }
 }

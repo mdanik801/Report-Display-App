@@ -308,6 +308,95 @@
 
     </div>
 
+    <!-- SWING / SEWING FLOOR 4 KPI CARDS (Compact Space-Efficient Horizontal Row) -->
+    <div id="swingKpiBar" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3">
+      
+      <!-- Card 1: Total Production -->
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between leading-none">
+          <span class="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-slate-600">Total Production</span>
+          <span class="w-4 h-4 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center flex-shrink-0" title="Sewing Floor Production">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline justify-between gap-1.5 mt-0.5 leading-none">
+          <div class="flex items-baseline gap-1">
+            <span id="kpiSwingProd" class="top-kpi-num metric-value text-emerald-800 font-black">0</span>
+            <span class="text-[10px] text-slate-400 font-bold">pcs</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] truncate text-right">
+            <span id="kpiSwingVarianceTag" class="font-bold text-slate-500">0 pcs variance</span>
+            <span class="text-slate-300">•</span>
+            <span id="kpiSwingPercentTag" class="text-emerald-700 font-semibold">0% of target</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Today Target -->
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between leading-none">
+          <span class="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-slate-600">Today Target</span>
+          <span class="w-4 h-4 rounded bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0" title="Day Target">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline justify-between gap-1.5 mt-0.5 leading-none">
+          <div class="flex items-baseline gap-1">
+            <span id="kpiSwingTarget" class="top-kpi-num metric-value text-slate-900 font-black">0</span>
+            <span class="text-[10px] text-slate-400 font-bold">pcs</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] text-slate-500 truncate text-right">
+            <span>Avg Hourly:</span>
+            <strong id="kpiSwingHourlySub" class="text-slate-800 font-bold">0 pcs/hr</strong>
+            <span class="text-slate-300">•</span>
+            <span id="kpiSwingCmmtSub" class="text-slate-500">CMMT: 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Floor Efficiency -->
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between leading-none">
+          <span class="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-slate-600">Floor Efficiency</span>
+          <span class="w-4 h-4 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center flex-shrink-0" title="Efficiency">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline justify-between gap-1.5 mt-0.5 leading-none">
+          <div class="flex items-center gap-1.5">
+            <span id="kpiSwingEff" class="top-kpi-num metric-value text-emerald-900 font-black">0.0%</span>
+            <span id="kpiSwingEffBadge" class="bg-slate-100 text-slate-600 text-[9.5px] font-bold px-1.5 py-0.5 rounded leading-none">--</span>
+          </div>
+          <div class="flex items-center gap-1 text-[10px] text-slate-500 truncate text-right">
+            <span id="kpiSwingSmvSub" class="truncate">Avg SMV: 0.00 • TG: 0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Active Lines & Manpower -->
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between leading-none">
+          <span class="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-slate-600">Active Lines &amp; Manpower</span>
+          <span class="w-4 h-4 rounded bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0" title="Floor Lines">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline justify-between gap-1.5 mt-0.5 leading-none">
+          <span id="kpiSwingActiveLines" class="top-kpi-num metric-value text-slate-900 font-black">0 / 0</span>
+          <div class="flex items-center gap-1.5 text-[10px] text-slate-500 truncate text-right">
+            <span id="kpiSwingMpSub" class="truncate">0 Total MP</span>
+            <span class="text-slate-300">•</span>
+            <span id="kpiSwingShiftDate" class="font-bold text-slate-700 flex-shrink-0">Today</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </section>
 
   <!-- ==============================================================================
@@ -447,6 +536,145 @@
         </div>
         <div>
           <span>Store Status: <strong class="text-emerald-900 font-black text-sm">Operational</strong></span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==========================================================================
+         VIEW 3: SWING / SEWING FLOOR TYPE REPORT DISPLAY
+         ========================================================================== -->
+    <section id="swingFloorModule" class="hidden flex flex-col gap-3 flex-1">
+      
+      <!-- Top Floor Metadata & Responsible Strip -->
+      <div class="bg-white rounded-xl p-3 border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-4 flex-wrap">
+          <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-950 font-bold px-2.5 py-1 rounded-lg border border-emerald-200">
+            <span>🧵</span>
+            <span id="swingFloorTitle">BURIGANGA - SEWING</span>
+          </span>
+          <span class="text-slate-600">
+            Floor Responsible: <strong id="swingFloorResp" class="text-slate-900 font-bold">--</strong>
+          </span>
+          <span class="text-slate-600">
+            ERP Responsible: <strong id="swingErpResp" class="text-slate-900 font-bold">--</strong>
+          </span>
+        </div>
+        <div class="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
+          <span>Total: <strong id="swingTotalLinesBadge" class="text-slate-800">0</strong> Lines</span>
+          <span>•</span>
+          <span>Running: <strong id="swingRunningLinesBadge" class="text-emerald-700">0</strong> Lines</span>
+          <span>•</span>
+          <span>Date: <strong id="swingDateBadge" class="text-slate-800">--</strong></span>
+        </div>
+      </div>
+
+      <!-- Subheader Filter & Search Bar -->
+      <div class="bg-white rounded-xl p-3 border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Filter PM / Lines:</span>
+          <div id="swingFilterButtons" class="flex items-center flex-wrap gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+            <button onclick="setSwingFilter('ALL')" id="fltSwingAll" class="px-2.5 py-1 rounded bg-white text-emerald-950 font-bold shadow-xs cursor-pointer">ALL (<span id="cntSwingAll">0</span>)</button>
+            <button onclick="setSwingFilter('Running')" id="fltSwingRunning" class="px-2.5 py-1 rounded text-slate-600 hover:text-slate-900 cursor-pointer">Running</button>
+          </div>
+        </div>
+
+        <div class="w-64 md:w-80">
+          <input type="text" id="swingSearchInput" oninput="filterSwingTable()" placeholder="Search by PM, Line, Buyer, Style Name, Item..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition" />
+        </div>
+      </div>
+
+      <!-- Blank State for Sewing Floor (Shown when no data exists) -->
+      <div id="swingBlankState" class="blank-state-box">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center text-3xl font-black shadow-inner">
+          🧵
+        </div>
+        <h3 class="text-lg font-black text-slate-900 mb-1">Sewing / Swing Floor Report is Blank</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mb-4">
+          No live sewing line records are currently stored. Click below to paste tab-separated rows copied directly from your Buriganga Sewing Excel report or upload a .xlsx file.
+        </p>
+        <button onclick="openAdminModal('swing')" class="btn-primary-paste mx-auto text-xs font-bold px-5 py-2.5">
+          <span>+ Paste Sewing Excel Data</span>
+        </button>
+      </div>
+
+      <!-- Auto-Scrolling Viewport for Swing Floor Table (Expanded Vertical Area) -->
+      <div id="swingTableScrollViewport" class="auto-scroll-viewport hidden bg-white rounded-xl border border-slate-200 shadow-sm max-h-[calc(100vh-210px)] overflow-x-auto">
+        <table class="w-full text-left border-collapse swing-data-table sticky-table-header text-[11px] leading-tight whitespace-nowrap">
+          <thead>
+            <!-- Multi-Row Header matching Excel exactly -->
+            <tr class="bg-industrial-green text-white font-bold text-center border-b border-emerald-900">
+              <th rowspan="2" class="py-2 px-2.5 border-r border-emerald-800/80 sticky left-0 z-20 bg-industrial-green min-w-[90px]">PM</th>
+              <th rowspan="2" class="py-2 px-2 border-r border-emerald-800/80 sticky left-[90px] z-20 bg-industrial-green min-w-[45px]">LINE</th>
+              <th rowspan="2" class="py-2 px-2.5 border-r border-emerald-800/80 text-left min-w-[95px]">BUYER</th>
+              <th rowspan="2" class="py-2 px-2.5 border-r border-emerald-800/80 text-left min-w-[150px]">STYLE NAME</th>
+              <th rowspan="2" class="py-2 px-2 border-r border-emerald-800/80 min-w-[55px]">ITEM</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[45px]">PRO/ DAY</th>
+              <th colspan="4" class="py-1.5 px-2 border-r border-emerald-800/80 bg-emerald-950/40">Manpower</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[48px]">SMV</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[45px]">TG%</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[55px]">100% TGT</th>
+              <th rowspan="2" class="py-2 px-1 border-r border-emerald-800/80 min-w-[35px]">W/H</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[55px]">IE TRG</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[50px]">IE H/TRG</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[55px]">CMMT TGT</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[50px]">H/TGT</th>
+              <th colspan="11" class="py-1.5 px-2 border-r border-emerald-800/80 bg-emerald-950/40">HOURLY- PRODUCTION</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[50px]">AVERAGE</th>
+              <th rowspan="2" class="py-2 px-2 border-r border-emerald-800/80 min-w-[60px] bg-emerald-950/30">TOTAL PROD</th>
+              <th rowspan="2" class="py-2 px-2 border-r border-emerald-800/80 min-w-[60px]">Today TGT</th>
+              <th rowspan="2" class="py-2 px-2 border-r border-emerald-800/80 min-w-[60px]">TGT Sh/Ex</th>
+              <th rowspan="2" class="py-2 px-1 border-r border-emerald-800/80 min-w-[35px]">W/Hr</th>
+              <th rowspan="2" class="py-2 px-2 border-r border-emerald-800/80 min-w-[65px] bg-emerald-950/30">EFFICIENCY%</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[55px]">Avail Min</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[55px]">Prod Min</th>
+              <th colspan="2" class="py-1.5 px-2 border-r border-emerald-800/80 bg-emerald-950/40">PM wise Effi %</th>
+              <th rowspan="2" class="py-2 px-1.5 border-r border-emerald-800/80 min-w-[45px]">In-Hand</th>
+              <th rowspan="2" class="py-2 px-2.5 min-w-[90px] text-left">REMARKS</th>
+            </tr>
+            <tr class="bg-industrial-green text-emerald-100 font-bold text-[10px] text-center border-b border-emerald-900">
+              <!-- Manpower sub-columns -->
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[32px]">OP</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[28px]">HL</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[32px]">IRON</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[38px] text-amber-300">TOTAL</th>
+              <!-- Hourly sub-columns -->
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">1st</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">2nd</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">3rd</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">4th</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">5th</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">6th</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">7th</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">8th</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">9th</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">10th</th>
+              <th class="py-1 px-1 border-r border-emerald-800/80 min-w-[34px]">12th</th>
+              <!-- PM wise sub-columns -->
+              <th class="py-1 px-1.5 border-r border-emerald-800/80 min-w-[75px]">PM Name</th>
+              <th class="py-1 px-1.5 border-r border-emerald-800/80 min-w-[55px]">PM Eff%</th>
+            </tr>
+          </thead>
+          <tbody id="swingTableBody">
+            <!-- Dynamically populated rows from script.js -->
+          </tbody>
+          <tfoot id="swingTableFoot" class="bg-slate-100 font-bold border-t-2 border-emerald-800">
+            <!-- Summary rows: TODAY PRODUCTION, Today Efficiency %, etc. -->
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Pinned Bottom Swing Summary Strip (Fixed Footer) -->
+      <div id="swingSummaryFooter" class="hidden sticky bottom-0 z-30 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl py-2.5 px-5 shadow-lg text-xs font-semibold text-slate-700 flex flex-wrap items-center justify-between gap-4 mt-2">
+        <div class="flex flex-wrap items-center gap-5">
+          <span>Active Lines: <strong id="sumSwingActiveLines" class="text-slate-900 font-bold">0 Lines</strong></span>
+          <span>Total Manpower: <strong id="sumSwingTotalMP" class="text-slate-900 font-bold">0 MP</strong></span>
+          <span>Today Target: <strong id="sumSwingTarget" class="text-slate-900 font-bold">0 pcs</strong></span>
+          <span>Total Output: <strong id="sumSwingTotalProd" class="text-emerald-800 font-black text-sm">0 pcs</strong></span>
+          <span>Variance: <strong id="sumSwingVariance" class="font-bold">0 pcs</strong></span>
+        </div>
+        <div>
+          <span>Floor Efficiency: <strong id="sumSwingFloorEff" class="text-emerald-900 font-black text-base">0.0%</strong></span>
         </div>
       </div>
 

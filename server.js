@@ -46,6 +46,7 @@ let dashboardState = {
   currentModule: 'finishing',
   finishingData: null,
   fabricData: null,
+  swingData: null,
   timingSettings: {
     posterIntervalSeconds: 20,
     noticeDurationSeconds: 15,
@@ -236,6 +237,13 @@ function startServer() {
           updated = true;
         }
 
+        // Updating swing floor data
+        if (body.type === 'swing' || body.type === 'sewing' || body.swingData !== undefined) {
+          const payload = body.swingData !== undefined ? body.swingData : body.data;
+          dashboardState.swingData = payload;
+          updated = true;
+        }
+
         // Updating active module view (supports finishing, fabric, store, cutting, swing, sewing)
         if (body.currentModule && typeof body.currentModule === 'string' && body.currentModule.trim()) {
           dashboardState.currentModule = body.currentModule.toLowerCase().trim();
@@ -294,9 +302,12 @@ function startServer() {
           dashboardState.finishingData = null;
         } else if (module === 'fabric') {
           dashboardState.fabricData = null;
+        } else if (module === 'swing' || module === 'sewing') {
+          dashboardState.swingData = null;
         } else {
           dashboardState.finishingData = null;
           dashboardState.fabricData = null;
+          dashboardState.swingData = null;
         }
 
         dashboardState.version = (dashboardState.version || 0) + 1;
@@ -438,6 +449,10 @@ function startNativeHttpServer() {
             dashboardState.fabricData = parsed.fabricData !== undefined ? parsed.fabricData : parsed.data;
             updated = true;
           }
+          if (parsed.type === 'swing' || parsed.type === 'sewing' || parsed.swingData !== undefined) {
+            dashboardState.swingData = parsed.swingData !== undefined ? parsed.swingData : parsed.data;
+            updated = true;
+          }
           if (parsed.currentModule && typeof parsed.currentModule === 'string' && parsed.currentModule.trim()) {
             dashboardState.currentModule = parsed.currentModule.toLowerCase().trim();
             updated = true;
@@ -483,7 +498,8 @@ function startNativeHttpServer() {
           const { module } = JSON.parse(body || '{}');
           if (module === 'finishing') dashboardState.finishingData = null;
           else if (module === 'fabric') dashboardState.fabricData = null;
-          else { dashboardState.finishingData = null; dashboardState.fabricData = null; }
+          else if (module === 'swing' || module === 'sewing') dashboardState.swingData = null;
+          else { dashboardState.finishingData = null; dashboardState.fabricData = null; dashboardState.swingData = null; }
 
           dashboardState.version = (dashboardState.version || 0) + 1;
           dashboardState.lastUpdated = new Date().toISOString();
