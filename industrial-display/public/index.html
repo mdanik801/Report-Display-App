@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AL MUSLIM GROUP - Industrial Monitor & Digital Signage Dashboard</title>
+  <!-- Tailwind CSS CDN for Modern Layout Utilities -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS CDN for Excel File Handling -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Minimalist Industrial Theme Stylesheet -->
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 antialiased flex flex-col min-h-screen">
+
+  <!-- ==============================================================================
+       SIMPLIFIED & SLEEK TOP NAVBAR
+       ============================================================================== -->
+  <header class="header-bar text-white sticky top-0 z-40">
+    <div class="max-w-[1920px] mx-auto px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Left: Logo + AL MUSLIM GROUP + Buriganga Finishing Floor -->
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl bg-white p-1 flex items-center justify-center shadow-md overflow-hidden relative flex-shrink-0">
+          <img id="facilityLogoImg" src="/posters/logo.png" alt="AL MUSLIM GROUP Logo" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('facilityLogoFallback').style.display='flex';" />
+          <div id="facilityLogoFallback" class="hidden absolute inset-0 items-center justify-center font-black text-sm bg-emerald-800 text-white">
+            AMG
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-base md:text-lg font-black tracking-wider uppercase text-white leading-tight">
+              AL MUSLIM GROUP
+            </span>
+          </div>
+          <p class="text-xs text-emerald-200 font-semibold tracking-wide">
+            Buriganga Finishing Floor
+          </p>
+        </div>
+      </div>
+
+      <!-- Right: Essential Tools & Actions -->
+      <div class="flex items-center gap-3 sm:gap-4">
+        
+        <!-- View Switcher (Segmented Control Tabs) -->
+        <div class="segmented-control">
+          <button id="tabBtnFinishing" onclick="switchModuleTab('finishing', true)" class="seg-tab-btn active">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <span>Finishing Floor</span>
+          </button>
+          <button id="tabBtnFabric" onclick="switchModuleTab('fabric', true)" class="seg-tab-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            <span>Fabric Store</span>
+          </button>
+        </div>
+
+        <!-- Auto-Scroll Speed Selector -->
+        <div class="hidden xl:flex items-center gap-1.5 bg-black/20 px-2.5 py-1 rounded-lg border border-white/10 text-xs">
+          <span id="scrollStatusDot" class="pulse-dot"></span>
+          <select id="scrollSpeedSelect" onchange="changeScrollSpeed(this.value)" class="bg-transparent text-emerald-100 font-semibold text-xs focus:outline-none cursor-pointer">
+            <option value="1.0" class="bg-slate-900 text-white" selected>Auto-Scroll: 1.0x</option>
+            <option value="0.5" class="bg-slate-900 text-white">Auto-Scroll: 0.5x</option>
+            <option value="1.8" class="bg-slate-900 text-white">Auto-Scroll: 1.8x</option>
+            <option value="0" class="bg-slate-900 text-white">Auto-Scroll: Pause</option>
+          </select>
+        </div>
+
+        <!-- Central LAN Multi-PC Sync Indicator -->
+        <button id="lanStatusBadge" onclick="openAdminModal('lan')" title="Central LAN Real-Time Sync Status. Click to view Multi-PC URLs." class="flex items-center gap-1.5 bg-emerald-950/70 hover:bg-emerald-900 px-2.5 py-1.5 rounded-lg border border-emerald-700/60 text-xs font-semibold shadow-xs transition cursor-pointer">
+          <span id="lanStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="lanStatusText" class="text-emerald-100 hidden sm:inline">LAN Synced</span>
+        </button>
+
+        <!-- Notice Slideshow Countdown & Timing Settings -->
+        <button id="noticeCountdownBtn" onclick="onNoticeBadgeClicked(event)" title="Notice Timer - Click to configure intervals (or Alt+Click to preview immediately)" class="flex items-center gap-2 bg-emerald-950/70 hover:bg-emerald-900 px-3 py-1.5 rounded-lg border border-emerald-700/60 text-xs font-semibold shadow-xs transition cursor-pointer">
+          <svg class="w-3.5 h-3.5 text-amber-300 animate-spin" style="animation-duration: 9s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="text-emerald-100 hidden sm:inline">Notice:</span>
+          <span id="noticeTimerDisplay" class="font-mono font-bold text-amber-300 text-sm">00:20</span>
+        </button>
+
+        <!-- Live Monospace Clock -->
+        <div class="hidden md:flex flex-col text-right pl-1">
+          <span id="liveClockDisplay" class="font-mono font-bold text-xs text-emerald-100">--:--:-- --</span>
+        </div>
+
+        <!-- Primary "+ Paste Excel" Action Button -->
+        <button onclick="openAdminModal()" class="btn-primary-paste active:scale-95 text-xs md:text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+          <span>+ Paste Excel</span>
+        </button>
+
+        <!-- Fullscreen Button -->
+        <button onclick="toggleFullscreen()" title="Toggle Fullscreen" class="p-1.5 bg-black/20 hover:bg-black/30 text-emerald-200 hover:text-white rounded-lg border border-white/10 transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ==============================================================================
+       TOP KPI SUMMARY CARDS (COMPACT & SPACE-EFFICIENT INDUSTRIAL ROW)
+       ============================================================================== -->
+  <section class="max-w-[1920px] w-full mx-auto px-4 md:px-6 pt-2.5 pb-1">
+    
+    <!-- FINISHING FLOOR 4 KPI CARDS (Compact Horizontal Row) -->
+    <div id="finishingKpiBar" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-3.5">
+      
+      <!-- Card 1: Total Production -->
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Total Production</span>
+          <span class="w-5 h-5 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline justify-between gap-1">
+          <div class="flex items-baseline gap-1.5">
+            <span id="kpiFinProd" class="kpi-massive-num metric-value text-emerald-800">0</span>
+            <span class="text-xs text-slate-400 font-bold">pcs</span>
+          </div>
+          <span id="kpiFinPercentTag" class="text-[11px] text-slate-500 font-semibold">0% of target</span>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-between text-[11px]">
+          <span id="kpiFinVarianceTag" class="font-bold text-slate-400 leading-none">0 pcs variance</span>
+          <span class="text-[10px] text-slate-400">Daily Actual</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Total Target -->
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Total Target (80%)</span>
+          <span class="w-5 h-5 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span id="kpiFinTarget" class="kpi-massive-num metric-value text-slate-900">0</span>
+          <span class="text-xs text-slate-400 font-bold">pcs</span>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <span>Target Capacity:</span>
+          <span id="kpiFinHourlySub" class="font-bold text-slate-700 leading-none">0 pcs/hr</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Floor Efficiency -->
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Floor Efficiency</span>
+          <span class="w-5 h-5 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpiFinEff" class="kpi-massive-num metric-value text-emerald-900">0.0%</span>
+          <span id="kpiFinEffBadge" class="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded leading-none">--</span>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <span id="kpiFinSmvSub" class="truncate">Avg SMV: 0.00 min</span>
+          <span class="text-emerald-700 font-semibold text-[10px] flex-shrink-0">Std: 60%</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Active Lines & Manpower -->
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Active Lines</span>
+          <span class="w-5 h-5 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpiFinActiveLines" class="kpi-massive-num metric-value text-slate-900">0 / 0</span>
+          <span class="text-[11px] font-bold text-emerald-700">Running</span>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <span id="kpiFinMpSub" class="truncate">0 Total Manpower</span>
+          <span id="kpiFinShiftDate" class="font-bold text-slate-700 flex-shrink-0">Today</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FABRIC STORE 4 KPI CARDS (Compact Horizontal Row) -->
+    <div id="fabricKpiBar" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-3.5">
+      
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Current Balance</span>
+          <span class="w-5 h-5 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span id="kpiFabBalance" class="kpi-massive-num metric-value text-emerald-950">0</span>
+          <span class="text-xs text-slate-400 font-bold">yds</span>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-100 text-[11px] text-emerald-700 font-semibold">Physical Stock Ready</div>
+      </div>
+
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Total Received</span>
+          <span class="w-5 h-5 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span id="kpiFabReceived" class="kpi-massive-num metric-value text-emerald-800">0</span>
+          <span class="text-xs text-slate-400 font-bold">yds</span>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-100 text-[11px] text-slate-500">Inward Factory Intake</div>
+      </div>
+
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Total Issued</span>
+          <span class="w-5 h-5 rounded bg-amber-50 text-amber-800 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span id="kpiFabIssued" class="kpi-massive-num metric-value text-amber-700">0</span>
+          <span class="text-xs text-slate-400 font-bold">yds</span>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-100 text-[11px] text-slate-500">Cutting Floor Issued</div>
+      </div>
+
+      <div class="top-kpi-card">
+        <div class="top-kpi-accent-bar"></div>
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Total Rolls &amp; Racks</span>
+          <span class="w-5 h-5 rounded bg-slate-100 text-slate-700 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span id="kpiFabRolls" class="kpi-massive-num metric-value text-slate-900">0</span>
+          <span class="text-xs text-slate-400 font-bold">rolls</span>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-100 text-[11px] text-slate-500" id="kpiFabRacksSub">0 Styles Registered</div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ==============================================================================
+       MAIN DASHBOARD DISPLAY
+       ============================================================================== -->
+  <main class="flex-1 max-w-[1920px] w-full mx-auto px-4 md:px-6 py-3 flex flex-col gap-4">
+    
+    <!-- ==========================================================================
+         VIEW 1: FINISHING FLOOR HOURLY LINE CARDS
+         ========================================================================== -->
+    <section id="finishingFloorModule" class="flex flex-col gap-3 flex-1">
+      
+      <!-- Subheader Filter & Search Bar -->
+      <div class="bg-white rounded-xl p-3 border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Filter Lines:</span>
+          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+            <button onclick="setLineFilter('ALL')" id="fltLineAll" class="px-3 py-1 rounded bg-white text-emerald-950 font-bold shadow-xs cursor-pointer">ALL (<span id="cntLineAll">0</span>)</button>
+            <button onclick="setLineFilter('Active')" id="fltLineActive" class="px-3 py-1 rounded text-slate-600 hover:text-slate-900 cursor-pointer">Running (<span id="cntLineActive">0</span>)</button>
+            <button onclick="setLineFilter('High Eff')" id="fltLineHigh" class="px-3 py-1 rounded text-slate-600 hover:text-slate-900 cursor-pointer">Top Eff (<span id="cntLineHigh">0</span>)</button>
+            <button onclick="setLineFilter('Line Off')" id="fltLineOff" class="px-3 py-1 rounded text-slate-600 hover:text-slate-900 cursor-pointer">Line Off (<span id="cntLineOff">0</span>)</button>
+          </div>
+        </div>
+
+        <div class="w-64 md:w-80">
+          <input type="text" id="finishingSearchInput" oninput="filterFinishingLines()" placeholder="Search by Line, Buyer, Style Name..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition" />
+        </div>
+      </div>
+
+      <!-- Blank State for Finishing Floor (Shown when no data exists) -->
+      <div id="finishingBlankState" class="blank-state-box">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center text-3xl font-black shadow-inner">
+          📊
+        </div>
+        <h3 class="text-lg font-black text-slate-900 mb-1">Finishing Floor Dashboard is Blank</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mb-4">
+          No live line records are currently stored. Click below to paste tab-separated rows copied directly from your Buriganga Finishing Floor Excel sheet.
+        </p>
+        <button onclick="openAdminModal('finishing')" class="btn-primary-paste mx-auto text-xs font-bold px-5 py-2.5">
+          <span>+ Paste Finishing Excel Data</span>
+        </button>
+      </div>
+
+      <!-- Auto-Scrolling Viewport for Hourly Line Cards -->
+      <div id="hourlyLinesScrollViewport" class="auto-scroll-viewport hidden bg-transparent flex-1 max-h-[calc(100vh-235px)] pr-1">
+        <div id="hourlyLinesContainer" class="flex flex-col">
+          <!-- Dynamically populated from script.js -->
+        </div>
+      </div>
+
+      <!-- Pinned Bottom Floor Summary Strip -->
+      <div id="finishingSummaryFooter" class="hidden bg-white border border-slate-200 rounded-xl py-3 px-5 shadow-sm text-xs font-semibold text-slate-700 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-5">
+          <span>Active: <strong id="sumActiveLines" class="text-slate-900 font-bold">0 Lines</strong></span>
+          <span>Manpower: <strong id="sumTotalMP" class="text-slate-900 font-bold">0 MP</strong></span>
+          <span>Hourly Rate: <strong id="sumTargetHr" class="text-slate-900 font-bold">0 pcs/hr</strong></span>
+          <span>80% Target: <strong id="sumTarget80" class="text-slate-900 font-bold">0 pcs</strong></span>
+          <span>Total Output: <strong id="sumTotalProd" class="text-emerald-800 font-black text-sm">0 pcs</strong></span>
+          <span>Variance: <strong id="sumVariance" class="font-bold">0 pcs</strong></span>
+        </div>
+        <div>
+          <span>Floor Efficiency: <strong id="sumFloorEff" class="text-emerald-900 font-black text-base">0.0%</strong></span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==========================================================================
+         VIEW 2: FABRIC STORE BALANCE REPORT
+         ========================================================================== -->
+    <section id="fabricStoreModule" class="hidden flex flex-col gap-3 flex-1">
+      
+      <!-- Subheader Filter & Search Bar -->
+      <div class="bg-white rounded-xl p-3 border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Stock Status:</span>
+          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+            <button onclick="setFabricStatusFilter('ALL')" id="fltFabAll" class="px-3 py-1 rounded bg-white text-emerald-950 font-bold shadow-xs cursor-pointer">ALL (<span id="cntFabAll">0</span>)</button>
+            <button onclick="setFabricStatusFilter('Running')" id="fltFabRunning" class="px-3 py-1 rounded text-slate-600 hover:text-slate-900 cursor-pointer">Running</button>
+            <button onclick="setFabricStatusFilter('Shortage')" id="fltFabShortage" class="px-3 py-1 rounded text-slate-600 hover:text-slate-900 cursor-pointer">Shortage</button>
+          </div>
+        </div>
+
+        <div class="w-64 md:w-80">
+          <input type="text" id="fabricSearchInput" oninput="filterFabricTable()" placeholder="Search by Style, Buyer, Supplier, Rack..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition" />
+        </div>
+      </div>
+
+      <!-- Blank State for Fabric Store (Shown when no data exists) -->
+      <div id="fabricBlankState" class="blank-state-box">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center text-3xl font-black shadow-inner">
+          📋
+        </div>
+        <h3 class="text-lg font-black text-slate-900 mb-1">Fabric Store Register is Blank</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mb-4">
+          No warehouse balance items have been loaded yet. Click below to paste tab-separated rows copied directly from your Fabric Balance spreadsheet.
+        </p>
+        <button onclick="openAdminModal('fabric')" class="btn-primary-paste mx-auto text-xs font-bold px-5 py-2.5">
+          <span>+ Paste Fabric Store Excel Data</span>
+        </button>
+      </div>
+
+      <!-- Auto-Scrolling Viewport for Fabric Store Table -->
+      <div id="fabricTableScrollViewport" class="auto-scroll-viewport hidden bg-white rounded-xl border border-slate-200 shadow-sm max-h-[calc(100vh-235px)]">
+        <table class="w-full text-left border-collapse fabric-data-table sticky-table-header text-xs">
+          <thead>
+            <tr>
+              <th class="py-3 px-3.5">SL</th>
+              <th class="py-3 px-3.5">Buyer</th>
+              <th class="py-3 px-3.5">Style Name</th>
+              <th class="py-3 px-3.5">Supplier</th>
+              <th class="py-3 px-3.5">Ref No</th>
+              <th class="py-3 px-3.5">Color</th>
+              <th class="py-3 px-3.5">Fabric Construction</th>
+              <th class="py-3 px-3.5 text-right">Opening Yds</th>
+              <th class="py-3 px-3.5 text-center">Last Rcvd</th>
+              <th class="py-3 px-3.5 text-right">Current Balance</th>
+              <th class="py-3 px-3.5 text-center">Rolls</th>
+              <th class="py-3 px-3.5 text-center">Rack No</th>
+              <th class="py-3 px-3.5 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="fabricTableBody">
+            <!-- Dynamically populated from script.js -->
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==============================================================================
+       CLEAN FULL-SCREEN 1-MINUTE NOTICE POSTER OVERLAY
+       (Text-free, pure poster display with clean floating countdown)
+       ============================================================================== -->
+  <div id="posterOverlay">
+    
+    <!-- Top-Right Floating Controls (15s Progress & Skip) -->
+    <div class="fixed top-5 right-6 z-50 flex items-center gap-3 bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white text-xs font-semibold shadow-2xl">
+      <div class="flex items-center gap-1.5">
+        <span class="text-amber-400 font-black text-sm" id="posterCountdownSeconds">15</span>
+        <span class="text-slate-300 text-[11px]">sec</span>
+      </div>
+      <span class="text-white/30">|</span>
+      <button onclick="dismissPosterSlideshow()" class="hover:text-amber-300 transition cursor-pointer flex items-center gap-1 font-bold">
+        <span>Skip</span>
+        <span>✕</span>
+      </button>
+    </div>
+
+    <!-- Centered Clean Poster Image -->
+    <div id="posterCard" class="animate-dhopash flex items-center justify-center">
+      <img id="posterDisplayImage" src="/posters/notice.jpg" alt="Notice Poster" class="poster-full-image" onerror="renderFallbackVectorPoster()" />
+    </div>
+
+    <!-- Bottom Progress Track -->
+    <div class="fixed bottom-0 left-0 right-0 h-1.5 bg-white/20 z-50">
+      <div id="posterProgressBar" class="h-full bg-amber-400 transition-all duration-100 ease-linear w-full"></div>
+    </div>
+
+  </div>
+
+  <!-- ==============================================================================
+       EXCEL COPY-PASTE & SETTINGS ADMIN MODAL (WITH LAN MULTI-PC SYNC & TIMING)
+       ============================================================================== -->
+  <div id="adminModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 items-center justify-center p-3 md:p-6 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full border border-slate-200 overflow-hidden flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="bg-industrial-green text-white p-4 md:p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="modalHeaderIcon" class="w-9 h-9 rounded-xl bg-emerald-500 text-emerald-950 flex items-center justify-center font-black shadow-sm">
+            📊
+          </div>
+          <div>
+            <h3 id="modalHeaderTitle" class="font-bold text-base md:text-lg">Dashboard Control &amp; Data Hub</h3>
+            <p id="modalHeaderSubtitle" class="text-xs text-emerald-200">Centralized LAN Storage • Multi-PC Sync • Notice Timing</p>
+          </div>
+        </div>
+        <button onclick="closeAdminModal()" class="text-emerald-300 hover:text-white p-1 rounded-lg hover:bg-emerald-800 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs inside Modal -->
+      <div class="flex border-b border-slate-200 bg-slate-100 px-4 md:px-6 pt-2 gap-2 text-xs font-bold overflow-x-auto">
+        <button id="modalTabBtnPaste" onclick="switchAdminModalTab('paste')" class="modal-tab-btn active px-4 py-2.5 rounded-t-xl flex items-center gap-2 transition cursor-pointer">
+          <span>📊 Paste Excel Data</span>
+        </button>
+        <button id="modalTabBtnTiming" onclick="switchAdminModalTab('timing')" class="modal-tab-btn px-4 py-2.5 rounded-t-xl flex items-center gap-2 transition cursor-pointer">
+          <span>⏱️ Notice Timing</span>
+        </button>
+        <button id="modalTabBtnLan" onclick="switchAdminModalTab('lan')" class="modal-tab-btn px-4 py-2.5 rounded-t-xl flex items-center gap-2 transition cursor-pointer">
+          <span>🌐 LAN Multi-PC Sync</span>
+        </button>
+      </div>
+
+      <!-- TAB PANEL 1: PASTE EXCEL TAB -->
+      <div id="modalPanelPaste" class="p-5 md:p-6 flex flex-col gap-4">
+        
+        <!-- LAN Server Live Status Banner -->
+        <div class="flex items-center justify-between text-xs text-slate-600 bg-emerald-50/80 px-3.5 py-2 rounded-xl border border-emerald-200/80">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="modalLanStatusText" class="font-semibold text-emerald-900">Connected to Central Server (Real-time LAN Broadcast active)</span>
+          </div>
+          <span id="modalLanLastSyncText" class="text-emerald-700 font-mono text-[11px]">Synced: Checking...</span>
+        </div>
+
+        <!-- Report Type Selection Dropdown -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Select Report Type to Paste</label>
+          <select id="modalReportTypeSelect" onchange="onModalReportTypeChange(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer">
+            <option value="finishing">1) Finishing Floor Report (Lines A-Q, 1st - 11th Hour Breakdown, Target &amp; Eff)</option>
+            <option value="fabric">2) Fabric Store Balance Report (Opening, Received, Issued, Balance, Rolls, Rack No)</option>
+          </select>
+          <p id="modalFormatHelper" class="mt-1.5 text-[11px] text-slate-500">
+            Expected columns: <code>Line | Buyer | Style | Process | Manpower | SMV | Day | Target/Hr | 1st - 11th Hours | Total Prod | Target | Eff% | Remarks</code>
+          </p>
+        </div>
+
+        <!-- Textarea -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Paste Cells Here (Ctrl + V)</label>
+            <span class="text-[11px] text-emerald-700 font-semibold">Automatic Delimiter &amp; Column Mapping</span>
+          </div>
+          <textarea id="modalPasteArea" rows="8" placeholder="Copy rows directly from your factory Excel sheet and press Ctrl+V here..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3.5 font-mono text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition resize-none"></textarea>
+          
+          <div class="flex flex-wrap items-center justify-between gap-2 mt-2.5">
+            <div class="flex items-center gap-2">
+              <button onclick="loadSampleDataIntoModal()" class="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-lg border border-emerald-300 transition cursor-pointer">
+                Paste Sample Data
+              </button>
+              <button onclick="clearModalPasteArea()" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-600 font-semibold text-xs rounded-lg border border-slate-300 transition cursor-pointer">
+                Clear Box
+              </button>
+              <button onclick="clearCurrentModuleData()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs rounded-lg border border-rose-200 transition cursor-pointer">
+                Reset Module to Blank
+              </button>
+            </div>
+            
+            <!-- File Upload Alternative -->
+            <label class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg border border-slate-300 cursor-pointer transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+              <span>Or Choose .xlsx / .csv</span>
+              <input type="file" id="modalFileInput" accept=".csv, .xlsx, .xls, .tsv, .txt" class="hidden" onchange="handleModalFileUpload(event)" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Feedback Notification -->
+        <div id="modalParseFeedback" class="hidden text-xs p-3.5 rounded-xl font-medium"></div>
+
+        <!-- Footer for Paste Tab -->
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
+          <button onclick="closeAdminModal()" class="px-4 py-2 bg-white hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition cursor-pointer">
+            Cancel
+          </button>
+          <button id="modalSaveDataBtn" onclick="processAndSaveModalData()" class="btn-primary-paste text-xs px-6 py-2.5">
+            <span>Process &amp; Broadcast to LAN</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- TAB PANEL 2: NOTICE & POSTER TIMING SETTINGS TAB -->
+      <div id="modalPanelTiming" class="hidden p-5 md:p-6 flex flex-col gap-4">
+        
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-900 flex items-start gap-2.5">
+          <span class="text-lg">⏱️</span>
+          <div>
+            <p class="font-bold">Notice &amp; Poster Timing Controls</p>
+            <p class="text-emerald-800 text-[11px] mt-0.5 leading-relaxed">
+              Configure how often industrial notices popup and how long they stay visible. Settings are stored persistently and broadcast to all connected TV screens and PCs across the LAN.
+            </p>
+          </div>
+        </div>
+
+        <!-- Timing Setting 1: Poster Popup Interval -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Poster Popup Interval (seconds)
+          </label>
+          <div class="flex gap-2">
+            <select id="settingPosterIntervalSelect" onchange="onPosterIntervalPresetChange(this.value)" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer">
+              <option value="20" selected>20 Seconds (Recommended / Default)</option>
+              <option value="30">30 Seconds</option>
+              <option value="60">1 Minute (60 Seconds)</option>
+              <option value="120">2 Minutes (120 Seconds)</option>
+              <option value="300">5 Minutes (300 Seconds)</option>
+              <option value="custom">Custom Value (in seconds)...</option>
+            </select>
+            <input type="number" id="settingPosterIntervalCustom" min="5" max="3600" placeholder="Sec (min 5)" class="hidden w-32 bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition" />
+          </div>
+          <p class="text-[11px] text-slate-500">
+            Determines how frequently the full-screen notice announcement automatically pops up. Default is 20s.
+          </p>
+        </div>
+
+        <!-- Timing Setting 2: Notice Display Duration -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Notice Display Duration (seconds)
+          </label>
+          <div class="flex gap-2">
+            <select id="settingNoticeDurationSelect" onchange="onNoticeDurationPresetChange(this.value)" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer">
+              <option value="5">5 Seconds</option>
+              <option value="10">10 Seconds</option>
+              <option value="15" selected>15 Seconds (Default)</option>
+              <option value="20">20 Seconds</option>
+              <option value="30">30 Seconds</option>
+              <option value="custom">Custom Value (in seconds)...</option>
+            </select>
+            <input type="number" id="settingNoticeDurationCustom" min="3" max="300" placeholder="Sec (min 3)" class="hidden w-32 bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition" />
+          </div>
+          <p class="text-[11px] text-slate-500">
+            Determines how long each notice remains on screen with countdown progress bar before closing. Default is 15s.
+          </p>
+        </div>
+
+        <!-- Active Timing Summary Indicator -->
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex items-center justify-between text-xs">
+          <span class="text-slate-600 font-medium">Current Active Timing:</span>
+          <span id="activeTimingSummaryPill" class="bg-emerald-100 text-emerald-900 px-3 py-1 rounded-full font-bold">
+            Interval: 20s • Duration: 15s
+          </span>
+        </div>
+
+        <!-- Feedback Notification for Timing -->
+        <div id="modalTimingFeedback" class="hidden text-xs p-3 rounded-xl font-medium"></div>
+
+        <!-- Footer for Timing Tab -->
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-3">
+          <button onclick="triggerNoticeImmediately()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition cursor-pointer">
+            Preview Notice Now
+          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="closeAdminModal()" class="px-4 py-2 bg-white hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition cursor-pointer">
+              Cancel
+            </button>
+            <button onclick="saveTimingSettingsFromModal()" class="btn-primary-paste text-xs px-5 py-2">
+              <span>Save &amp; Apply Timing</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB PANEL 3: LAN MULTI-PC SYNC & NETWORK INFO TAB -->
+      <div id="modalPanelLan" class="hidden p-5 md:p-6 flex flex-col gap-4">
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-900 flex items-start gap-2.5">
+          <span class="text-lg">🌐</span>
+          <div>
+            <p class="font-bold">Multi-PC LAN Live Synchronization</p>
+            <p class="text-blue-800 text-[11px] mt-0.5 leading-relaxed">
+              The server is listening on <code>0.0.0.0:3000</code>. Any PC, tablet, or Smart TV connected to the same LAN / Wi-Fi network can open the URL below to view real-time production updates automatically.
+            </p>
+          </div>
+        </div>
+
+        <!-- LAN URLs Display List -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            Available LAN Access URLs (Open on Other PCs or Smart TVs)
+          </label>
+          <div id="lanUrlsContainer" class="space-y-2">
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono font-bold text-slate-800">
+              <span id="primaryLanUrlDisplay">Loading host IP addresses...</span>
+              <button onclick="copyPrimaryLanUrl()" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded font-sans text-xs font-semibold cursor-pointer">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs space-y-2.5 text-slate-700">
+          <p class="font-bold text-slate-900 flex items-center gap-1.5">
+            <span>⚡</span> How Shared LAN Data Synchronization Works:
+          </p>
+          <ul class="list-disc list-inside space-y-1 text-slate-600 text-[11px] leading-relaxed">
+            <li><strong>Central Storage:</strong> All pasted Excel rows and settings are saved to <code>data/dashboard_data.json</code> on the host PC.</li>
+            <li><strong>Instant Broadcast:</strong> The host server broadcasts updates via <strong>Server-Sent Events (SSE)</strong> to all open browsers.</li>
+            <li><strong>Automatic Sync:</strong> When anyone pastes new Excel data, every other PC updates without needing to refresh!</li>
+            <li><strong>Persistence:</strong> Restarting the server or refreshing any browser restores the exact same latest report data.</li>
+          </ul>
+        </div>
+
+        <!-- Footer for LAN Tab -->
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-end">
+          <button onclick="closeAdminModal()" class="px-5 py-2 bg-industrial-green text-white font-bold text-xs rounded-xl shadow-sm transition cursor-pointer">
+            Done
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Main JavaScript Application Engine -->
+  <script src="/script.js"></script>
+</body>
+</html>

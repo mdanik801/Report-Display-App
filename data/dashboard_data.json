@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-11-01T02:27:59.000Z",
+  "lastUpdatedBy": "system",
+  "currentModule": "finishing",
+  "finishingData": null,
+  "fabricData": null,
+  "timingSettings": {
+    "posterIntervalSeconds": 30,
+    "noticeDurationSeconds": 10,
+    "scrollSpeed": 8
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "industrial-display",
+  "version": "1.0.0",
+  "description": "AL MUSLIM GROUP - Industrial Monitor & Digital Signage Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "keywords": [
+    "industrial",
+    "dashboard",
+    "digital-signage",
+    "garments",
+    "al-muslim-group",
+    "lan"
+  ],
+  "author": "AL MUSLIM GROUP",
+  "license": "MIT"
+}

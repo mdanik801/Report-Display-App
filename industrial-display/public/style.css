@@ -1,0 +1,448 @@
+/* ==============================================================================
+   AL MUSLIM GROUP - INDUSTRIAL MONITOR & DIGITAL SIGNAGE DASHBOARD
+   Minimalist "Apple/Stripe-Style" Industrial Design System
+   Palette: Deep Dark Green (#0F4C3A), Pure White (#FFFFFF), Crisp Slate Grays
+   ============================================================================== */
+
+:root {
+  --header-green: #0F4C3A;
+  --header-green-dark: #0A372A;
+  --accent-emerald: #10B981;
+  --accent-emerald-dark: #059669;
+  --bg-page: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --slate-heading: #0F172A;
+  --slate-body: #334155;
+  --slate-muted: #64748B;
+  --border-subtle: #E2E8F0;
+  --card-radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--slate-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* High-contrast Tabular Figures */
+.tabular-nums, .metric-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+/* Top Navbar Styling */
+.header-bar {
+  background-color: var(--header-green);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px -2px rgba(10, 55, 42, 0.25);
+}
+
+/* Segmented Control / Module Tabs (Apple-Style) */
+.segmented-control {
+  background-color: rgba(0, 0, 0, 0.22);
+  padding: 3px;
+  border-radius: 9px;
+  display: inline-flex;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.seg-tab-btn {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 7px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #A7F3D0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.seg-tab-btn:hover {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.seg-tab-btn.active {
+  background-color: #FFFFFF;
+  color: var(--header-green);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Primary "+ Paste Excel" Button */
+.btn-primary-paste {
+  background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+  color: #064E3B;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 7px 16px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.btn-primary-paste:hover {
+  background: linear-gradient(180deg, #6EE7B7 0%, #34D399 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);
+}
+.btn-primary-paste:active {
+  transform: translateY(0);
+}
+
+/* Compact & Space-Efficient Top KPI Cards (Height reduced by ~40%) */
+.top-kpi-card {
+  background: var(--bg-card);
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  padding: 0.6rem 0.95rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 78px;
+}
+.top-kpi-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(15, 76, 58, 0.07);
+}
+.top-kpi-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--header-green);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.kpi-massive-num {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 900;
+  color: var(--slate-heading);
+}
+@media (min-width: 1536px) {
+  .kpi-massive-num {
+    font-size: 1.7rem;
+  }
+}
+
+/* ==============================================================================
+   HOURLY LINE CARDS (Clean Horizontal Rows - Spacious Industrial Style)
+   ============================================================================== */
+.hourly-line-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  margin-bottom: 0.85rem;
+}
+.hourly-line-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 8px 18px -3px rgba(15, 76, 58, 0.09);
+  transform: translateY(-1px);
+}
+.hourly-line-card.line-off {
+  background: #F8FAFC;
+  opacity: 0.65;
+  border-style: dashed;
+}
+
+/* Line Badge */
+.line-badge-square {
+  background-color: var(--header-green);
+  color: #FFFFFF;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  box-shadow: 0 3px 6px rgba(15, 76, 58, 0.22);
+  flex-shrink: 0;
+}
+.line-off .line-badge-square {
+  background-color: #94A3B8;
+  box-shadow: none;
+}
+
+/* Hourly Breakdown 11-Cell Container */
+.hourly-cells-grid {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(38px, 1fr));
+  gap: 5px;
+}
+.hour-pill-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 5px 3px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 36px;
+  transition: all 0.15s ease;
+}
+.hour-pill-box.active-output {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.1);
+}
+.hour-pill-box.target-exceeded {
+  background: #DCFCE7;
+  border-color: #22C55E;
+}
+.hour-pill-tag {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748B;
+  line-height: 1;
+  margin-bottom: 3px;
+  letter-spacing: 0.02em;
+}
+.hour-pill-value {
+  font-size: 14px;
+  font-weight: 900;
+  color: #0F172A;
+  line-height: 1;
+}
+.active-output .hour-pill-value {
+  color: #065F46;
+}
+.hour-pill-box.empty-output .hour-pill-value {
+  color: #CBD5E1;
+  font-weight: 600;
+}
+
+/* Red-to-Green Target vs Total Progress Bar */
+.target-prog-track {
+  width: 100%;
+  height: 8px;
+  background-color: #E2E8F0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.target-prog-bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bar-grad-green {
+  background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+}
+.bar-grad-amber {
+  background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
+}
+.bar-grad-red {
+  background: linear-gradient(90deg, #F87171 0%, #DC2626 100%);
+}
+.bar-grad-gray {
+  background: #CBD5E1;
+}
+
+/* Circular Efficiency Gauge (SVG Radial Ring) */
+.gauge-circle-bg {
+  stroke: #E2E8F0;
+  fill: none;
+}
+.gauge-circle-progress {
+  fill: none;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+/* Continuous Auto-Scroll Viewport */
+.auto-scroll-viewport {
+  overflow-y: auto;
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.auto-scroll-viewport::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.auto-scroll-viewport::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+.auto-scroll-viewport::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+.auto-scroll-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--header-green);
+}
+
+/* Sticky Table Header for Fabric Store View */
+.sticky-table-header th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: var(--header-green);
+  color: #FFFFFF;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.fabric-data-table tbody tr:nth-child(even) {
+  background-color: #F8FAFC;
+}
+.fabric-data-table tbody tr:nth-child(odd) {
+  background-color: #FFFFFF;
+}
+.fabric-data-table tbody tr:hover {
+  background-color: #F0FDF4;
+}
+
+/* Clean Empty Initial State */
+.blank-state-box {
+  background: #FFFFFF;
+  border: 2px dashed #CBD5E1;
+  border-radius: 16px;
+  padding: 4rem 2rem;
+  text-align: center;
+  margin: 1.5rem 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+/* Clean Full-Screen Poster Overlay (No Extra Text Boxes) */
+#posterOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+#posterOverlay.active {
+  display: flex;
+}
+.poster-full-image {
+  max-width: 95vw;
+  max-height: 92vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+/* Dhopash & Thopash Animations */
+.animate-dhopash {
+  animation: dhopashDrop 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  transform-origin: center center;
+}
+@keyframes dhopashDrop {
+  0% { opacity: 0; transform: translateY(-120%) scale(0.85); }
+  65% { opacity: 1; transform: translateY(8px) scale(1.02); }
+  85% { transform: translateY(-4px) scale(0.995); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-thopash {
+  animation: thopashPop 0.42s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+  transform-origin: center center;
+}
+@keyframes thopashPop {
+  0% { opacity: 1; transform: scale(1); }
+  25% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(0.2) translateY(120px); }
+}
+
+/* Admin Modal */
+#adminModal {
+  display: none;
+}
+#adminModal.active {
+  display: flex;
+}
+
+/* Admin Modal Tabs */
+.modal-tab-btn {
+  color: #64748B;
+  background-color: transparent;
+  border-bottom: 2px solid transparent;
+}
+.modal-tab-btn:hover {
+  color: #0F172A;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+.modal-tab-btn.active {
+  color: #064E3B;
+  background-color: #FFFFFF;
+  border-bottom: 2px solid #059669;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Pulsing Status Dot */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10B981;
+  display: inline-block;
+  animation: dotPulse 2s infinite;
+}
+.pulse-dot.paused {
+  background-color: #F59E0B;
+  animation: none;
+}
+.pulse-dot.offline {
+  background-color: #EF4444;
+  animation: none;
+}
+@keyframes dotPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Responsive Utilities */
+@media (max-width: 1024px) {
+  .hourly-cells-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .hourly-cells-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Diagnostic Drawer & Formula Warning */
+.badge-formula-error {
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
