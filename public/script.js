@@ -2619,6 +2619,10 @@ function closeAdminModal() {
   if (modal) {
     modal.classList.remove('active');
   }
+  const textarea = document.getElementById('modalPasteArea');
+  if (textarea) textarea.value = '';
+  const fileInput = document.getElementById('modalFileInput');
+  if (fileInput) fileInput.value = '';
   const feedback = document.getElementById('modalParseFeedback');
   if (feedback) feedback.classList.add('hidden');
   const timingFeedback = document.getElementById('modalTimingFeedback');
@@ -2677,6 +2681,11 @@ async function processAndSaveModalData() {
       fabricData = parsed;
       localStorage.setItem('al_muslim_fabric_data', JSON.stringify(fabricData));
     }
+
+    // Auto-clear input field when paste data is submitted
+    if (textarea) textarea.value = '';
+    const fileInput = document.getElementById('modalFileInput');
+    if (fileInput) fileInput.value = '';
 
     showModalFeedback(`✓ Processed locally. Broadcasting to central LAN server...`, 'info');
 

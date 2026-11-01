@@ -553,7 +553,7 @@
       <!-- TAB PANEL 1: PASTE EXCEL TAB -->
       <div id="modalPanelPaste" class="p-4 md:p-5 flex flex-col gap-3.5">
         
-        <!-- Top Toolbar: LAN Status + Report Selector + Upload Button -->
+        <!-- Top Toolbar: Report Selector + Upload Button -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
           
           <!-- Left: Report Type Dropdown -->
@@ -567,21 +567,13 @@
             </select>
           </div>
 
-          <!-- Right: Upload File Button & Status Indicator -->
-          <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
-            <!-- File Upload Alternative -->
+          <!-- Right: Upload File Button -->
+          <div class="flex items-center gap-2">
             <label class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-lg border border-slate-300 cursor-pointer transition shadow-xs">
               <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
               <span>Choose .xlsx / .csv</span>
               <input type="file" id="modalFileInput" accept=".csv, .xlsx, .xls, .tsv, .txt" class="hidden" onchange="handleModalFileUpload(event)" />
             </label>
-
-            <!-- Compact LAN Status Pill -->
-            <div class="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-200 text-[11px] text-emerald-900 font-medium">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span id="modalLanStatusText">Sync Ready</span>
-              <span id="modalLanLastSyncText" class="text-emerald-700 font-mono text-[10px] hidden sm:inline">• Live</span>
-            </div>
           </div>
 
         </div>
@@ -604,17 +596,7 @@
           <textarea id="modalPasteArea" rows="7" placeholder="Copy rows directly from your Excel sheet and press Ctrl+V here..." class="w-full bg-slate-50/70 border border-slate-300 rounded-xl p-3 font-mono text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white focus:ring-1 focus:ring-emerald-600 transition resize-none"></textarea>
           
           <!-- Action Buttons Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-2 mt-2">
-            <div class="flex items-center gap-2">
-              <button onclick="loadSampleDataIntoModal()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-lg border border-emerald-300 transition cursor-pointer flex items-center gap-1">
-                <span>⚡</span>
-                <span>Paste Sample Data</span>
-              </button>
-              <button onclick="clearModalPasteArea()" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-600 font-semibold text-xs rounded-lg border border-slate-300 transition cursor-pointer">
-                Clear Box
-              </button>
-            </div>
-
+          <div class="flex items-center justify-end gap-2 mt-2">
             <button onclick="clearCurrentModuleData()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs rounded-lg border border-rose-200 transition cursor-pointer flex items-center gap-1">
               <span>🗑️</span>
               <span>Reset Module Data</span>
