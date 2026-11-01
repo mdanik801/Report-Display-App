@@ -245,9 +245,27 @@ function startLiveClock() {
 // 3. STORAGE & DATA PERSISTENCE
 // ==============================================================================
 function loadStoredDataFromStorage() {
+  const isStaticHost = (window.location.protocol === 'file:' || window.location.hostname.endsWith('github.io'));
+  if (isStaticHost) {
+    const storedFin = localStorage.getItem('al_muslim_finishing_data');
+    if (storedFin) {
+      try { finishingData = JSON.parse(storedFin); }
+      catch (e) { finishingData = null; }
+    }
+    const storedFab = localStorage.getItem('al_muslim_fabric_data');
+    if (storedFab) {
+      try { fabricData = JSON.parse(storedFab); }
+      catch (e) { fabricData = null; }
+    }
+    const activeModule = normalizeModuleId(currentModule || 'finishing');
+    if (activeModule === 'finishing') renderFinishingModule();
+    else renderFabricModule();
+    return;
+  }
+
   // Always fetch from server first; if server has null data, clear local cache too.
   // This ensures a server-side data clear is always respected on next load.
-  fetch('/api/data', { cache: 'no-store' })
+  fetch('api/data', { cache: 'no-store' })
     .then(res => res.ok ? res.json() : null)
     .then(json => {
       const serverData = json && json.data ? json.data : null;
@@ -1855,8 +1873,13 @@ function changeScrollSpeed(speedVal) {
 // 11. 1-MINUTE NOTICE SLIDESHOW OVERLAY ("DHOPASH" & "THOPASH")
 // ==============================================================================
 function fetchPostersList() {
-  fetch('/api/posters')
-    .then(res => res.json())
+  const isStaticSite = window.location.protocol === 'file:' || window.location.hostname.endsWith('github.io');
+  if (isStaticSite) {
+    posterImagesList = ["notice.jpg", "notice.jpeg"];
+    return;
+  }
+  fetch('api/posters')
+    .then(res => (res.ok ? res.json() : null))
     .then(data => {
       if (Array.isArray(data) && data.length > 0) {
         const seen = new Set();
@@ -1868,11 +1891,13 @@ function fetchPostersList() {
             unique.push(fn);
           }
         });
-        posterImagesList = unique.length > 0 ? unique : ["notice.jpg"];
+        posterImagesList = unique.length > 0 ? unique : ["notice.jpg", "notice.jpeg"];
+      } else {
+        posterImagesList = ["notice.jpg", "notice.jpeg"];
       }
     })
     .catch(() => {
-      posterImagesList = ["notice.jpg"];
+      posterImagesList = ["notice.jpg", "notice.jpeg"];
     });
 }
 
@@ -1880,6 +1905,12 @@ function fetchPostersList() {
 // 11. CENTRAL LAN MULTI-PC REAL-TIME SYNCHRONIZATION ENGINE
 // ==============================================================================
 function initLanSync() {
+  const isStaticSite = (window.location.protocol === 'file:' || window.location.hostname.endsWith('github.io'));
+  if (isStaticSite) {
+    updateLanBadge('offline', 'Static Mode');
+    return;
+  }
+
   // 1. Initial fetch from central host server
   fetchServerDashboardData();
 
@@ -2439,14 +2470,17 @@ function triggerNoticePopup() {
   if (!overlay || !img) return;
 
   if (!posterImagesList || posterImagesList.length === 0) {
-    posterImagesList = ["notice.jpg"];
+    posterImagesList = ["notice.jpg", "notice.jpeg"];
   }
 
-  const currentPoster = posterImagesList[activePosterIndex % posterImagesList.length];
-  img.src = currentPoster.startsWith('data:') || currentPoster.startsWith('http')
-    ? currentPoster
-    : `/posters/${currentPoster}`;
+  const rawPoster = posterImagesList[activePosterIndex % posterImagesList.length];
+  let posterUrl = rawPoster;
+  if (!rawPoster.startsWith('data:') && !rawPoster.startsWith('http://') && !rawPoster.startsWith('https://')) {
+    const clean = rawPoster.replace(/^\/+/, '');
+    posterUrl = clean.startsWith('posters/') ? clean : `posters/${clean}`;
+  }
 
+  img.src = posterUrl;
   activePosterIndex = (activePosterIndex + 1) % posterImagesList.length;
 
   if (card) {
@@ -2500,18 +2534,16 @@ function renderFallbackVectorPoster() {
   img._failCount++;
 
   const fallbacks = [
-    '/posters/notice.jpg',
-    '/posters/notice.jpeg',
-    '/notice.jpeg',
     'posters/notice.jpg',
     'posters/notice.jpeg',
     'notice.jpeg',
-    'notice.jpg'
+    'notice.jpg',
+    'public/posters/notice.jpg'
   ];
 
   if (img._failCount <= fallbacks.length) {
     const nextSrc = fallbacks[img._failCount - 1];
-    if (img.src.indexOf(nextSrc) === -1) {
+    if (!img.src.endsWith(nextSrc)) {
       img.src = nextSrc;
       return;
     }

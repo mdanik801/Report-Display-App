@@ -9,7 +9,7 @@
   <!-- SheetJS CDN for Excel File Handling -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- Minimalist Industrial Theme Stylesheet -->
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body class="bg-[#F8FAFC] text-slate-800 antialiased flex flex-col min-h-screen">
 
@@ -22,7 +22,7 @@
       <!-- Left: Logo + AL MUSLIM GROUP + Buriganga Finishing Floor -->
       <div class="flex items-center gap-3.5">
         <div class="w-11 h-11 rounded-xl bg-white p-1 flex items-center justify-center shadow-md overflow-hidden relative flex-shrink-0">
-          <img id="facilityLogoImg" src="/posters/logo.png" alt="AL MUSLIM GROUP Logo" class="w-full h-full object-contain" onerror="if(!this._tried2){this._tried2=1;this.src='/logo.png';}else if(!this._tried3){this._tried3=1;this.src='posters/logo.png';}else if(!this._tried4){this._tried4=1;this.src='logo.png';}else{this.style.display='none';document.getElementById('facilityLogoFallback').style.display='flex';}" />
+          <img id="facilityLogoImg" src="posters/logo.png" alt="AL MUSLIM GROUP Logo" class="w-full h-full object-contain" onerror="if(!this._tried2){this._tried2=1;this.src='logo.png';}else if(!this._tried3){this._tried3=1;this.src='posters/logo.png';}else{this.style.display='none';document.getElementById('facilityLogoFallback').style.display='flex';}" />
           <div id="facilityLogoFallback" class="hidden absolute inset-0 items-center justify-center font-black text-sm bg-emerald-800 text-white">
             AMG
           </div>
@@ -475,7 +475,7 @@
 
     <!-- Centered Clean Poster Image -->
     <div id="posterCard" class="animate-dhopash flex items-center justify-center">
-      <img id="posterDisplayImage" src="/posters/notice.jpg" alt="Notice Poster" class="poster-full-image" onerror="renderFallbackVectorPoster()" />
+      <img id="posterDisplayImage" src="posters/notice.jpg" alt="Notice Poster" class="poster-full-image" onerror="renderFallbackVectorPoster()" />
     </div>
 
     <!-- Bottom Progress Track -->
@@ -752,6 +752,6 @@
   </div>
 
   <!-- Main JavaScript Application Engine -->
-  <script src="/script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
