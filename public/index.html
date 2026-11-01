@@ -545,9 +545,6 @@
         <button id="modalTabBtnTiming" onclick="switchAdminModalTab('timing')" class="modal-tab-btn px-4 py-2 rounded-t-lg flex items-center gap-1.5 transition cursor-pointer">
           <span>⏱️ Notice Timing</span>
         </button>
-        <button id="modalTabBtnLan" onclick="switchAdminModalTab('lan')" class="modal-tab-btn px-4 py-2 rounded-t-lg flex items-center gap-1.5 transition cursor-pointer">
-          <span>🌐 LAN Multi-PC Sync</span>
-        </button>
       </div>
 
       <!-- TAB PANEL 1: PASTE EXCEL TAB -->
@@ -726,53 +723,6 @@
               <span>Save &amp; Apply Timing</span>
             </button>
           </div>
-        </div>
-
-      </div>
-
-      <!-- TAB PANEL 3: LAN MULTI-PC SYNC & NETWORK INFO TAB -->
-      <div id="modalPanelLan" class="hidden p-5 md:p-6 flex flex-col gap-4">
-        
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-900 flex items-start gap-2.5">
-          <span class="text-lg">🌐</span>
-          <div>
-            <p class="font-bold">Multi-PC LAN Live Synchronization</p>
-            <p class="text-blue-800 text-[11px] mt-0.5 leading-relaxed">
-              The server is listening on <code>0.0.0.0:3000</code>. Any PC, tablet, or Smart TV connected to the same LAN / Wi-Fi network can open the URL below to view real-time production updates automatically.
-            </p>
-          </div>
-        </div>
-
-        <!-- LAN URLs Display List -->
-        <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-            Available LAN Access URLs (Open on Other PCs or Smart TVs)
-          </label>
-          <div id="lanUrlsContainer" class="space-y-2">
-            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono font-bold text-slate-800">
-              <span id="primaryLanUrlDisplay">Loading host IP addresses...</span>
-              <button onclick="copyPrimaryLanUrl()" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded font-sans text-xs font-semibold cursor-pointer">Copy</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs space-y-2.5 text-slate-700">
-          <p class="font-bold text-slate-900 flex items-center gap-1.5">
-            <span>⚡</span> How Shared LAN Data Synchronization Works:
-          </p>
-          <ul class="list-disc list-inside space-y-1 text-slate-600 text-[11px] leading-relaxed">
-            <li><strong>Central Storage:</strong> All pasted Excel rows and settings are saved to <code>data/dashboard_data.json</code> on the host PC.</li>
-            <li><strong>Instant Broadcast:</strong> The host server broadcasts updates via <strong>Server-Sent Events (SSE)</strong> to all open browsers.</li>
-            <li><strong>Automatic Sync:</strong> When anyone pastes new Excel data, every other PC updates without needing to refresh!</li>
-            <li><strong>Persistence:</strong> Restarting the server or refreshing any browser restores the exact same latest report data.</li>
-          </ul>
-        </div>
-
-        <!-- Footer for LAN Tab -->
-        <div class="pt-3 border-t border-slate-200 flex items-center justify-end">
-          <button onclick="closeAdminModal()" class="px-5 py-2 bg-industrial-green text-white font-bold text-xs rounded-xl shadow-sm transition cursor-pointer">
-            Done
-          </button>
         </div>
 
       </div>

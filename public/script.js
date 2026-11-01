@@ -2559,18 +2559,16 @@ function renderFallbackVectorPoster() {
 function switchAdminModalTab(tabId) {
   const tabPaste = document.getElementById('modalTabBtnPaste');
   const tabTiming = document.getElementById('modalTabBtnTiming');
-  const tabLan = document.getElementById('modalTabBtnLan');
 
   const panelPaste = document.getElementById('modalPanelPaste');
   const panelTiming = document.getElementById('modalPanelTiming');
-  const panelLan = document.getElementById('modalPanelLan');
 
   const icon = document.getElementById('modalHeaderIcon');
   const title = document.getElementById('modalHeaderTitle');
   const subtitle = document.getElementById('modalHeaderSubtitle');
 
-  [tabPaste, tabTiming, tabLan].forEach(btn => btn?.classList.remove('active'));
-  [panelPaste, panelTiming, panelLan].forEach(panel => panel?.classList.add('hidden'));
+  [tabPaste, tabTiming].forEach(btn => btn?.classList.remove('active'));
+  [panelPaste, panelTiming].forEach(panel => panel?.classList.add('hidden'));
 
   if (tabId === 'timing') {
     if (tabTiming) tabTiming.classList.add('active');
@@ -2579,13 +2577,6 @@ function switchAdminModalTab(tabId) {
     if (title) title.textContent = 'Notice & Poster Timing Settings';
     if (subtitle) subtitle.textContent = 'Configurable Popup Intervals & Display Durations';
     loadTimingSettingsIntoUI();
-  } else if (tabId === 'lan') {
-    if (tabLan) tabLan.classList.add('active');
-    if (panelLan) panelLan.classList.remove('hidden');
-    if (icon) icon.textContent = '🌐';
-    if (title) title.textContent = 'Multi-PC LAN Live Synchronization';
-    if (subtitle) subtitle.textContent = 'Central Host Storage • Server-Sent Events Broadcast';
-    fetchLanNetworkInfo();
   } else {
     if (tabPaste) tabPaste.classList.add('active');
     if (panelPaste) panelPaste.classList.remove('hidden');
@@ -2602,8 +2593,8 @@ function openAdminModal(preferredTypeOrTab) {
   if (!modal) return;
   modal.classList.add('active');
 
-  if (preferredTypeOrTab === 'timing' || preferredTypeOrTab === 'lan' || preferredTypeOrTab === 'paste') {
-    switchAdminModalTab(preferredTypeOrTab);
+  if (preferredTypeOrTab === 'timing') {
+    switchAdminModalTab('timing');
   } else {
     switchAdminModalTab('paste');
     const select = document.getElementById('modalReportTypeSelect');
